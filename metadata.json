@@ -1,0 +1,7 @@
+{
+  "name": "Electronic Hollywood II",
+  "description": "A spatial hypercard experience. Tribute to Jaime Levy. Built with React, Tone.js, and Phaser.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}
