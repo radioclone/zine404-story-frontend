@@ -1,20 +1,61 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
 
-# Run and deploy your AI Studio app
+# 🎬 StoryOS
 
-This contains everything you need to run your app locally.
+> **A spatial hypercard experience. Tribute to Jaime Levy.**  
+> Built with React, Tone.js, and Phaser.
 
-View your app in AI Studio: https://ai.studio/apps/drive/1xKZSdEag1kMUgoF99R_9ed6VoC1qG2dC
+![Status](https://img.shields.io/badge/Status-Alpha-orange) ![Stack](https://img.shields.io/badge/Stack-React_Phaser_Tone-blue) ![AI](https://img.shields.io/badge/AI-Gemini_Multimodal_Live-purple) ![Web3](https://img.shields.io/badge/Network-Story_Odyssey_Testnet-green)
 
-## Run Locally
+---
 
-**Prerequisites:**  Node.js
+## 🔮 The Vision
 
+StoryOS is a spatial operating system designed to reclaim the creative workflow from centralized walled gardens. It pays homage to the pioneering interface design work of Jaime Levy, bringing the spirit of Mac HyperCards into the modern browser.
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+*   **For GMs:** An AI-powered workspace to generate lore, maps, and rules on the fly.
+*   **For Players:** A sovereign character sheet where your stats and loot live in your wallet.
+*   **For Creators:** Register your homebrew monsters and items as IP Assets.
+
+---
+
+## 🏗 System Architecture
+
+The project is designed as a retro-futurist OS.
+
+### 1. The Spatial Layer (UI/UX)
+*   **Engine:** React 19 + Tailwind CSS.
+*   **Aesthetics:** High-fidelity pixel art, CRT scanlines, and glassmorphism.
+*   **Audio:** Procedural "Focus Mode" music using `Tone.js`.
+
+### 2. The Intelligence Layer (AI Game Master)
+*   **Provider:** Google Gemini Multimodal Live API.
+*   **Persona:** "Muze" — currently a creative writing assistant.
+*   **Real-Time:** Low-latency voice interaction for "Theatre of the Mind" gameplay.
+
+### 3. The Sovereignty Layer (Web3)
+*   **Protocol:** Story Protocol (Odyssey Testnet).
+*   **Assets:** Every file (Image, Text, Audio) can be minted as a **Programmable IP Asset**.
+
+---
+
+## 💻 Developer Setup
+
+1.  **Clone & Install**
+    ```bash
+    npm install
+    ```
+
+2.  **Environment Variables**
+    Create a `.env` file:
+    ```env
+    API_KEY=your_google_gemini_api_key
+    ```
+
+3.  **Run Locally**
+    ```bash
+    npm run dev
+    ```
+
+---
+
+*Inspired by the works of Jaime Levy and the ethos of Cypherpunk.*

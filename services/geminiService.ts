@@ -1,6 +1,5 @@
-
 import { GoogleGenAI, Type, Schema } from "@google/genai";
-import { AgentMessage, DraftContent, IPLicenseParams } from "../types";
+import { AgentMessage, DraftContent } from "../types";
 
 const getClient = () => {
   const apiKey = process.env.API_KEY;
@@ -56,8 +55,8 @@ export const consultAgent = async (
     Tone: Cyberpunk Legal, Precise, Minimal. No fluff.
     
     Current Asset Context:
-    Title: ${currentDraft.title || "Untitled"}
-    Content Preview: ${currentDraft.body.substring(0, 100)}...
+    Title: ${currentDraft.ip.title || "Untitled"}
+    Content Preview: ${currentDraft.ip.description?.substring(0, 100) || "No description provided"}...
     Current Terms: ${JSON.stringify(currentDraft.ip.licenseTerms)}
     
     Your Tasks:

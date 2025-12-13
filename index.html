@@ -1,10 +1,9 @@
-
 <!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Electronic Hollywood OS</title>
+    <title>StoryOS</title>
     <script src="https://cdn.tailwindcss.com"></script>
     
     <!-- CRITICAL POLYFILLS FOR WEB3/STORY PROTOCOL -->
@@ -25,6 +24,9 @@
     <!-- 3. Load Buffer Library -->
     <script src="https://bundle.run/buffer@6.0.3"></script>
     
+    <!-- ElevenLabs ConvAI Widget -->
+    <script src="https://unpkg.com/@elevenlabs/convai-widget-embed@beta" async type="text/javascript"></script>
+    
     <script>
       if (window.buffer) {
         window.Buffer = window.buffer.Buffer;
@@ -33,49 +35,44 @@
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Courier+Prime:ital,wght@0,400;0,700;1,400&family=Playfair+Display:ital,wght@0,400;0,900;1,900&display=swap" rel="stylesheet">
+    <!-- TYPOGRAPHY UPGRADE: Pixelify Sans (UI), Space Grotesk (Body), Playfair (Display), VT323 (Terminal) -->
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Pixelify+Sans:wght@400..700&family=Playfair+Display:ital,wght@0,400;0,900;1,400;1,900&family=VT323&display=swap" rel="stylesheet">
+    
     <script>
       tailwind.config = {
         theme: {
           extend: {
             fontFamily: {
               serif: ['"Playfair Display"', 'serif'],
-              mono: ['"Courier Prime"', 'monospace'],
+              sans: ['"Space Grotesk"', 'sans-serif'], // Geometric Tech
+              pixel: ['"Pixelify Sans"', 'sans-serif'], // High-Res Retro UI
+              mono: ['"VT323"', 'monospace'], // CRT Terminal
             },
             colors: {
-              'bitcoin-orange': '#F7941D', // Updated to specific orange
-              'burnt-orange': '#C27800',   // Darker Amber
-              'warm-black': '#080808',
-              'void-black': '#000000',
-              'tech-gray': '#111111',
+              'zinc-404': '#FF3B30',
+              'bitcoin-orange': '#F7931A',
+              'retro-gray': '#CCCCCC',
+            },
+            backgroundImage: {
+              'pixel-grid': "url(\"data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-opacity='0.05' fill-rule='evenodd'%3E%3Cpath d='M0 38.59l2.83-2.83 1.41 1.41L1.41 40H0v-1.41zM0 1.4l2.83 2.83 1.41-1.41L1.41 0H0v1.41zM38.59 40l-2.83-2.83 1.41-1.41L40 38.59V40h-1.41zM40 1.41l-2.83 2.83-1.41-1.41L38.59 0H40v1.41zM20 18.6l2.83-2.83 1.41 1.41L21.41 20l2.83 2.83-1.41 1.41L20 21.41l-2.83 2.83-1.41-1.41L18.59 20l-2.83-2.83 1.41-1.41L20 18.59z'/%3E%3C/g%3E%3C/svg%3E\")",
             },
             animation: {
-              'glitch': 'glitch 0.3s cubic-bezier(.25, .46, .45, .94) both infinite',
-              'layer-recede': 'layerRecede 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards',
-              'layer-restore': 'layerRestore 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards',
-              'module-slide-up': 'moduleSlideUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards',
-              'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+              'float': 'float 6s ease-in-out infinite',
+              'scale-in': 'scaleIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+              'window-open': 'windowOpen 0.4s cubic-bezier(0.23, 1, 0.32, 1) forwards',
             },
             keyframes: {
-              glitch: {
-                '0%': { transform: 'translate(0)' },
-                '20%': { transform: 'translate(-2px, 2px)' },
-                '40%': { transform: 'translate(-2px, -2px)' },
-                '60%': { transform: 'translate(2px, 2px)' },
-                '80%': { transform: 'translate(2px, -2px)' },
-                '100%': { transform: 'translate(0)' }
+              float: {
+                '0%, 100%': { transform: 'translateY(0)' },
+                '50%': { transform: 'translateY(-10px)' },
               },
-              layerRecede: {
-                '0%': { transform: 'scale(1) translateZ(0)', opacity: '1', filter: 'blur(0px)' },
-                '100%': { transform: 'scale(0.85) translateZ(-200px)', opacity: '0.5', filter: 'blur(4px)' },
+              scaleIn: {
+                '0%': { transform: 'scale(0.9)', opacity: '0' },
+                '100%': { transform: 'scale(1)', opacity: '1' },
               },
-              layerRestore: {
-                '0%': { transform: 'scale(0.85) translateZ(-200px)', opacity: '0.5', filter: 'blur(4px)' },
-                '100%': { transform: 'scale(1) translateZ(0)', opacity: '1', filter: 'blur(0px)' },
-              },
-              moduleSlideUp: {
-                '0%': { transform: 'translateY(120%) scale(0.95)', opacity: '0' },
-                '100%': { transform: 'translateY(0) scale(1)', opacity: '1' },
+              windowOpen: {
+                '0%': { transform: 'scale(0.8) translateY(20px)', opacity: '0' },
+                '100%': { transform: 'scale(1) translateY(0)', opacity: '1' },
               }
             }
           }
@@ -83,38 +80,26 @@
       }
     </script>
     <style>
-      body { margin: 0; overflow: hidden; background-color: #000; color: #fff; cursor: crosshair; }
+      body { margin: 0; overflow: hidden; background-color: #050505; color: #fff; cursor: default; }
       
-      .amber-filter {
-        filter: grayscale(100%) sepia(100%) hue-rotate(5deg) saturate(300%) contrast(1.2);
-      }
-
-      .scanlines::before {
-        content: " ";
-        display: block;
+      .no-scrollbar::-webkit-scrollbar { width: 0px; background: transparent; }
+      
+      /* CRT Scanline Effect Overlay */
+      .scanlines {
+        background: linear-gradient(
+          to bottom,
+          rgba(255,255,255,0),
+          rgba(255,255,255,0) 50%,
+          rgba(0,0,0,0.1) 50%,
+          rgba(0,0,0,0.1)
+        );
+        background-size: 100% 4px;
         position: absolute;
-        top: 0;
-        left: 0;
-        bottom: 0;
-        right: 0;
-        background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(247, 148, 29, 0.03), rgba(0, 0, 0, 0.02), rgba(247, 148, 29, 0.03));
-        z-index: 50;
-        background-size: 100% 3px, 3px 100%;
+        inset: 0;
         pointer-events: none;
+        z-index: 9999;
+        opacity: 0.3;
       }
-
-      .no-scrollbar::-webkit-scrollbar {
-          width: 4px;
-      }
-      .no-scrollbar::-webkit-scrollbar-track {
-          background: rgba(255,255,255,0.02);
-      }
-      .no-scrollbar::-webkit-scrollbar-thumb {
-          background: rgba(255,255,255,0.1);
-          border-radius: 4px;
-      }
-      
-      canvas { display: block; } 
     </style>
   <script type="importmap">
 {
@@ -125,8 +110,9 @@
     "@google/genai": "https://aistudiocdn.com/@google/genai@^1.30.0",
     "tone": "https://esm.sh/tone@14.7.77",
     "phaser": "https://esm.sh/phaser@3.80.1",
-    "viem": "https://esm.sh/viem@2.21.29?bundle",
-    "@story-protocol/core-sdk": "https://esm.sh/@story-protocol/core-sdk@1.3.0?bundle"
+    "viem": "https://esm.sh/viem@2.21.29",
+    "@coinbase/wallet-sdk": "https://esm.sh/@coinbase/wallet-sdk@4.0.3",
+    "@story-protocol/core-sdk": "https://esm.sh/@story-protocol/core-sdk@1.3.0"
   }
 }
 </script>

@@ -1,11 +1,29 @@
 
 import { useRef, useState, useEffect } from 'react';
-import { GoogleGenAI, LiveServerMessage, Modality } from "@google/genai";
+import { GoogleGenAI, LiveServerMessage, Modality, Type, FunctionDeclaration } from "@google/genai";
+
+export interface MuzeSuggestion {
+    rationale: string;
+    text: string;
+}
+
+export interface ChatMessage {
+    id: string;
+    role: 'user' | 'model';
+    text: string;
+    isFinal?: boolean;
+}
 
 export const useLiveAgent = () => {
   const [isConnected, setIsConnected] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [volume, setVolume] = useState(0);
+  const [suggestion, setSuggestion] = useState<MuzeSuggestion | null>(null);
+  
+  // Chat State
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [realtimeInput, setRealtimeInput] = useState('');
+  const [realtimeOutput, setRealtimeOutput] = useState('');
 
   const inputContextRef = useRef<AudioContext | null>(null);
   const outputContextRef = useRef<AudioContext | null>(null);
@@ -14,6 +32,10 @@ export const useLiveAgent = () => {
   const inputSource = useRef<MediaStreamAudioSourceNode | null>(null);
   const nextStartTime = useRef<number>(0);
   
+  // Transcription Buffers
+  const inputBuffer = useRef('');
+  const outputBuffer = useRef('');
+
   // Helper: Float32 -> Int16 PCM (Input)
   const floatTo16BitPCM = (input: Float32Array) => {
     const output = new Int16Array(input.length);
@@ -72,7 +94,7 @@ export const useLiveAgent = () => {
     if (outputContextRef.current.state === 'suspended') await outputContextRef.current.resume();
   };
 
-  const connect = async () => {
+  const connect = async (currentDraftContent: string) => {
     try {
       await initAudioContexts();
       const inputCtx = inputContextRef.current!;
@@ -94,19 +116,56 @@ export const useLiveAgent = () => {
 
       const ai = new GoogleGenAI({ apiKey });
       
+      const suggestEditTool: FunctionDeclaration = {
+          name: "suggest_edit",
+          description: "Suggest a text edit, rewrite, or continuation for the story.",
+          parameters: {
+              type: Type.OBJECT,
+              properties: {
+                  rationale: { type: Type.STRING, description: "Brief explanation of why this edit is suggested." },
+                  suggested_text: { type: Type.STRING, description: "The actual text content to add or replace." }
+              },
+              required: ["rationale", "suggested_text"]
+          }
+      };
+
       const config = {
         model: 'gemini-2.5-flash-native-audio-preview-09-2025',
         config: {
             responseModalities: [Modality.AUDIO],
-            systemInstruction: "You are the voice of 'Electronic Hollywood'. You are a cyberpunk creative assistant helping a user build their IP. Your voice is precise, cool, and helpful. Keep responses concise.",
+            // Enable transcription for both input and output
+            inputAudioTranscription: {},
+            outputAudioTranscription: {},
+            systemInstruction: `You are MUZE, a cyberpunk creative assistant inside the Electronic Hollywood OS. 
+            
+            CONTEXT:
+            The user is writing a story. Here is the current draft:
+            """
+            ${currentDraftContent}
+            """
+            
+            YOUR ROLE:
+            - Help brainstorm, fix plot holes, and develop characters.
+            - Your voice is cool, precise, and supportive but slightly edgy.
+            - Keep audio responses concise.
+            
+            TOOLS:
+            - If you want to suggest a concrete text change (a new paragraph, a rewrite, a dialogue line), call the 'suggest_edit' tool.
+            - Do not dictate long passages of text via audio; use the tool instead so the user can paste it.
+            `,
+            tools: [{ functionDeclarations: [suggestEditTool] }]
         }
       };
 
-      const session = await ai.live.connect({ 
+      const sessionPromise = ai.live.connect({ 
           ...config, 
           callbacks: {
             onopen: async () => {
                 setIsConnected(true);
+                // Reset State
+                setMessages([]);
+                inputBuffer.current = "";
+                outputBuffer.current = "";
                 
                 inputSource.current = inputCtx.createMediaStreamSource(stream);
                 // Use larger buffer size for stability
@@ -124,11 +183,14 @@ export const useLiveAgent = () => {
                     const pcm16 = floatTo16BitPCM(inputData);
                     const base64 = base64Encode(pcm16.buffer);
                     
-                    session.sendRealtimeInput({
-                        media: {
-                            mimeType: "audio/pcm;rate=16000",
-                            data: base64
-                        }
+                    // Use sessionPromise to ensure session is resolved and avoid race conditions
+                    sessionPromise.then(session => {
+                        session.sendRealtimeInput({
+                            media: {
+                                mimeType: "audio/pcm;rate=16000",
+                                data: base64
+                            }
+                        });
                     });
                 };
                 
@@ -136,6 +198,75 @@ export const useLiveAgent = () => {
                 processor.current.connect(inputCtx.destination);
             },
             onmessage: (msg: LiveServerMessage) => {
+                // 1. Handle Tool Calls
+                if (msg.toolCall) {
+                    for (const fc of msg.toolCall.functionCalls) {
+                        if (fc.name === 'suggest_edit') {
+                            const args = fc.args as any;
+                            setSuggestion({
+                                rationale: args.rationale,
+                                text: args.suggested_text
+                            });
+
+                            sessionPromise.then(session => {
+                                session.sendToolResponse({
+                                    functionResponses: {
+                                        id: fc.id,
+                                        name: fc.name,
+                                        response: { result: "Suggestion displayed to user." }
+                                    }
+                                });
+                            });
+                        }
+                    }
+                }
+
+                // 2. Handle Transcription
+                const serverContent = msg.serverContent;
+                if (serverContent) {
+                    // Update Buffers
+                    if (serverContent.inputTranscription) {
+                        inputBuffer.current += serverContent.inputTranscription.text;
+                        setRealtimeInput(inputBuffer.current);
+                    }
+                    if (serverContent.outputTranscription) {
+                        outputBuffer.current += serverContent.outputTranscription.text;
+                        setRealtimeOutput(outputBuffer.current);
+                    }
+
+                    // Turn Complete: Flush buffers to History
+                    if (serverContent.turnComplete) {
+                        setMessages(prev => {
+                            const newHistory = [...prev];
+                            // Only add if there is content
+                            if (inputBuffer.current.trim()) {
+                                newHistory.push({
+                                    id: Date.now().toString() + '-user',
+                                    role: 'user',
+                                    text: inputBuffer.current.trim(),
+                                    isFinal: true
+                                });
+                            }
+                            if (outputBuffer.current.trim()) {
+                                newHistory.push({
+                                    id: Date.now().toString() + '-model',
+                                    role: 'model',
+                                    text: outputBuffer.current.trim(),
+                                    isFinal: true
+                                });
+                            }
+                            return newHistory;
+                        });
+
+                        // Reset buffers
+                        inputBuffer.current = "";
+                        outputBuffer.current = "";
+                        setRealtimeInput("");
+                        setRealtimeOutput("");
+                    }
+                }
+
+                // 3. Handle Audio
                 const audioData = msg.serverContent?.modelTurn?.parts?.[0]?.inlineData?.data;
                 if (audioData) {
                     setIsSpeaking(true);
@@ -169,7 +300,7 @@ export const useLiveAgent = () => {
           }
       });
 
-      currentSession.current = session;
+      currentSession.current = await sessionPromise;
 
     } catch (e) {
         console.error("Connection Failed", e);
@@ -179,7 +310,6 @@ export const useLiveAgent = () => {
 
   const disconnect = () => {
       if (currentSession.current) {
-        // Close logic if available or just drop ref
         currentSession.current = null;
       }
       if (processor.current && inputSource.current) {
@@ -190,11 +320,51 @@ export const useLiveAgent = () => {
       setIsSpeaking(false);
       setVolume(0);
       nextStartTime.current = 0;
+      setSuggestion(null);
+      setMessages([]);
+      setRealtimeInput('');
+      setRealtimeOutput('');
+  };
+
+  const sendTextMessage = (text: string) => {
+      if (!isConnected || !currentSession.current) return;
+
+      // Add user message to history immediately
+      setMessages(prev => [...prev, {
+          id: Date.now().toString(),
+          role: 'user',
+          text: text,
+          isFinal: true
+      }]);
+
+      // Send to API
+      // Note: This does not trigger inputTranscription, so we don't need to deduplicate.
+      currentSession.current.send({
+          clientContent: {
+              turns: [{
+                  role: 'user',
+                  parts: [{ text }]
+              }],
+              turnComplete: true
+          }
+      });
   };
 
   useEffect(() => {
       return () => disconnect();
   }, []);
 
-  return { connect, disconnect, isConnected, isSpeaking, volume };
+  return { 
+      connect, 
+      disconnect, 
+      isConnected, 
+      isSpeaking, 
+      volume, 
+      suggestion, 
+      setSuggestion,
+      messages,
+      realtimeInput,
+      realtimeOutput,
+      sendTextMessage
+  };
 };

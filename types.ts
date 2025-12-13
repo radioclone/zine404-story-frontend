@@ -1,45 +1,54 @@
+
 import React from 'react';
 
-export type ViewState = 'HOME' | 'TERMS' | 'MEDIA' | 'DRAFT';
+export type RegistrationStep = 'TYPE' | 'DETAILS' | 'CONTRIBUTORS' | 'LICENSING' | 'REVIEW';
 
-export interface SectionConfig {
-  id: ViewState;
-  label: string;
-  subLabel: string;
-  component?: React.ReactNode;
+export type IconType = 'NODE' | 'APP' | 'TRASH' | 'FILE' | 'FOLDER' | 'MUSIC' | 'SHOPPING' | 'TIMER' | 'BOOK';
+
+export interface IconData {
+    id: string;
+    label: string;
+    x: number;
+    y: number;
+    type: IconType;
+    iconImage?: string; 
+    url?: string;
 }
 
-// Story Protocol / IP Data
-// PIL (Programmable IP License) Standard
-export interface IPLicenseParams {
-    type: 'NON_COMMERCIAL_REMIX' | 'COMMERCIAL_USE' | 'COMMERCIAL_REMIX';
+export interface Creator {
+    address: string;
+    percentage: number;
+}
+
+export interface LicenseConfig {
+    type: 'OPEN_USE' | 'NON_COMMERCIAL_REMIX' | 'COMMERCIAL_USE' | 'COMMERCIAL_REMIX';
+    price: string; // Minting Fee
+    currency: string; // Token address
     commercialRevShare: number; // 0-100
     derivativesAllowed: boolean;
     attribution: boolean;
-    commercializerChecker?: string; // Address
+    aiTrainingAllowed: boolean; // "Commercial Remix" AI permission
 }
 
 export interface IPAsset {
-  id: string | null; // On-Chain ID
-  status: 'UNREGISTERED' | 'REGISTERED';
-  owner: string;
-  hash: string; 
-  licenseTerms: IPLicenseParams;
-  parents: string[]; // Array of Parent IP IDs for Remixes
-  metadataURI?: string;
+    id: string | null;
+    status: 'UNREGISTERED' | 'REGISTERED';
+    isRemix: boolean;
+    parentId?: string; // For Remixes
+    title: string;
+    description: string;
+    creators: Creator[];
+    licenseTerms: LicenseConfig;
 }
 
 export interface DraftContent {
-  title: string;
-  body: string;
-  author: string;
-  media: {
-    file: File | null;
-    previewUrl: string | null;
-    hash: string | null;
-    mimeType: string | null;
-  };
-  ip: IPAsset;
+    media: {
+        file: File | null;
+        previewUrl: string | null;
+        hash: string | null;
+        mimeType: string | null;
+    };
+    ip: IPAsset;
 }
 
 export interface NetworkState {

@@ -11,6 +11,10 @@ export const useUiSounds = () => {
   const limiter = useRef<Tone.Limiter | null>(null);
   const masterGain = useRef<Tone.Gain | null>(null);
   
+  // FOCUS MODE REFS
+  const focusDrone = useRef<Tone.PolySynth | null>(null);
+  const focusLoop = useRef<Tone.Loop | null>(null);
+  
   const isInitialized = useRef(false);
   const isInitializing = useRef(false);
 
@@ -30,6 +34,11 @@ export const useUiSounds = () => {
     if (drumSynth.current) { drumSynth.current.dispose(); drumSynth.current = null; }
     if (ignitionSynth.current) { ignitionSynth.current.dispose(); ignitionSynth.current = null; }
     if (demoLoop.current) { demoLoop.current.dispose(); demoLoop.current = null; }
+    
+    // Focus Cleanup
+    if (focusDrone.current) { focusDrone.current.releaseAll(); focusDrone.current.dispose(); focusDrone.current = null; }
+    if (focusLoop.current) { focusLoop.current.dispose(); focusLoop.current = null; }
+
     if (masterGain.current) { masterGain.current.dispose(); masterGain.current = null; }
     if (limiter.current) { limiter.current.dispose(); limiter.current = null; }
     
@@ -55,17 +64,13 @@ export const useUiSounds = () => {
     if (!isInitializing.current) return;
 
     // --- GAIN STAGING & SIGNAL CHAIN ---
-    // Optimization: Increased Headroom to prevent summing distortion.
-    // Signals are mixed low (-12dB range) before hitting the limiter.
-    
     limiter.current = new Tone.Limiter(-1).toDestination(); 
     masterGain.current = new Tone.Gain(0.8).connect(limiter.current);
     
-    const reverb = new Tone.Reverb({ decay: 1.0, wet: 0.2 }).connect(masterGain.current);
+    const reverb = new Tone.Reverb({ decay: 2.5, wet: 0.3 }).connect(masterGain.current);
     await reverb.generate();
 
     // 1. CHORD SYNTH (The Jazz Engine)
-    // Optimization: Release reduced to 0.3 to clear voices faster (Fixes GC hangs)
     synth.current = new Tone.PolySynth(Tone.FMSynth, {
       maxPolyphony: 4, 
       volume: -12, 
@@ -106,6 +111,17 @@ export const useUiSounds = () => {
     drumSynth.current = new Tone.MembraneSynth({
         volume: -15
     }).connect(masterGain.current); 
+    
+    // 5. FOCUS DRONE (Ambient Generator)
+    // Uses FatOscillator for width + Lowpass filter for softness
+    const focusFilter = new Tone.Filter(800, "lowpass").connect(reverb);
+    const chorus = new Tone.Chorus(4, 2.5, 0.5).connect(focusFilter).start();
+    focusDrone.current = new Tone.PolySynth(Tone.Synth, {
+        maxPolyphony: 6,
+        volume: -20,
+        oscillator: { type: "fatcustom", partials: [0.2, 1, 0, 0.5, 0.1], spread: 40, count: 3 },
+        envelope: { attack: 2, decay: 1, sustain: 1, release: 4 }
+    }).connect(chorus);
 
     // 5. SEQUENCER
     demoLoop.current = new Tone.Loop((time) => {
@@ -176,11 +192,46 @@ export const useUiSounds = () => {
         Tone.Transport.start();
     }
   }, [initAudio]);
+  
+  const toggleFocusMusic = useCallback(async (shouldPlay: boolean) => {
+      if (Tone.context.state !== 'running') {
+        try { await Tone.context.resume(); } catch(e) {}
+      }
+      if (!isInitialized.current) await initAudio();
+
+      // Clear existing focus loop
+      if (focusLoop.current) {
+          focusLoop.current.dispose();
+          focusLoop.current = null;
+      }
+      if (focusDrone.current) {
+          focusDrone.current.releaseAll();
+      }
+
+      if (shouldPlay && focusDrone.current) {
+          // Generative Ambient Loop (Eno style)
+          const notes = ["C3", "G3", "D4", "E4", "G4", "B4"];
+          focusLoop.current = new Tone.Loop((time) => {
+              if (Math.random() > 0.4) {
+                  const note = notes[Math.floor(Math.random() * notes.length)];
+                  const dur = Math.random() * 4 + 2;
+                  focusDrone.current?.triggerAttackRelease(note, dur, time);
+              }
+          }, "2n").start(0);
+          
+          Tone.Transport.start();
+      } else {
+          // If we are stopping focus but not playing demo, stop transport
+          if (Tone.Transport.state === 'started' && !demoLoop.current?.state) {
+              Tone.Transport.stop();
+          }
+      }
+  }, [initAudio]);
 
   // Cleanup
   useEffect(() => {
     return () => dispose();
   }, [dispose]);
 
-  return { playHover, playClick, initAudio, playDemoTrack, playIgnition };
+  return { playHover, playClick, initAudio, playDemoTrack, playIgnition, toggleFocusMusic };
 };

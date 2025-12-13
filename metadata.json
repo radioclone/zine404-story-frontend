@@ -1,5 +1,5 @@
 {
-  "name": "Electronic Hollywood II",
+  "name": "StoryOS",
   "description": "A spatial hypercard experience. Tribute to Jaime Levy. Built with React, Tone.js, and Phaser.",
   "requestFramePermissions": [
     "microphone"

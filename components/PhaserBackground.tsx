@@ -64,7 +64,7 @@ const PhaserBackground: React.FC<PhaserBackgroundProps> = ({ active = true }) =>
       
       // Idle State: Very flat, calm line
       // Active State: Responsive wave
-      const amplitudeBase = isActive ? 40 : 5;
+      const amplitudeBase = isActive ? 30 : 2;
       
       for (let i = 0; i <= resolution; i++) {
         const x = (i / resolution) * width;
@@ -74,25 +74,27 @@ const PhaserBackground: React.FC<PhaserBackgroundProps> = ({ active = true }) =>
         const attenuation = Math.exp(-4 * normX * normX);
 
         // Frequency modulation
-        const carrierFreq = 0.003;
-        const signal = Math.sin((i * 10) + time * carrierFreq);
+        const carrierFreq = 0.002;
+        const signal = Math.sin((i * 12) + time * carrierFreq);
         
         // Reactivity
-        // Subtle damping: max bass amp contribution reduced from 250 to 200
-        const bassAmp = isActive ? (bass * 200) : 0;
+        const bassAmp = isActive ? (bass * 150) : 0;
         const totalAmp = (amplitudeBase + bassAmp) * attenuation;
         
-        const noise = isActive ? (Math.random() - 0.5) * (treble * 10) : 0;
+        const noise = isActive ? (Math.random() - 0.5) * (treble * 8) : 0;
 
-        const y = (height / 2) + (signal * totalAmp) + noise;
+        // DESIGN FIX: Move wave to bottom 20% of screen to avoid overlapping icons
+        const yOffset = height * 0.85; 
+        
+        const y = yOffset + (signal * totalAmp) + noise;
         
         points.push({ x, y });
       }
 
       // Draw Main Wave
-      // Color: Updated to #F7941D
-      const alpha = isActive ? 0.8 : 0.3;
-      const thickness = isActive ? 2 : 1;
+      // DESIGN FIX: Reduced opacity for ambient feel
+      const alpha = isActive ? 0.4 : 0.1; 
+      const thickness = isActive ? 1 : 1;
       
       graphics.lineStyle(thickness, 0xF7941D, alpha);
       graphics.beginPath();
@@ -102,9 +104,9 @@ const PhaserBackground: React.FC<PhaserBackgroundProps> = ({ active = true }) =>
       }
       graphics.strokePath();
       
-      // Glow Effect (Duplicate stroke with low alpha)
+      // Glow Effect (Duplicate stroke with very low alpha)
       if (isActive) {
-        graphics.lineStyle(8, 0xF7941D, 0.1);
+        graphics.lineStyle(6, 0xF7941D, 0.05);
         graphics.strokePath();
       }
     }
