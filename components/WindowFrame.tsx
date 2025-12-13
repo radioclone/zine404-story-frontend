@@ -23,13 +23,17 @@ const WindowFrame: React.FC<WindowFrameProps> = ({ title, onClose, children, cla
             
             {/* Window Controls Bar */}
             <div className="relative shrink-0 h-14 md:h-16 flex items-center justify-between px-4 md:px-8 z-50 border-b border-white/[0.05] bg-white/[0.01]">
-                <div className="flex gap-2">
+                <div className="flex gap-2 min-w-[60px]">
                     <button onClick={onClose} className="w-3 h-3 rounded-full bg-[#FF5F57] hover:bg-[#FF5F57]/80 shadow-[0_0_10px_rgba(255,95,87,0.3)] transition-all" />
                     <button className="w-3 h-3 rounded-full bg-[#FEBC2E] hover:bg-[#FEBC2E]/80 shadow-[0_0_10px_rgba(254,188,46,0.3)] transition-all" />
                     <button className="hidden md:block w-3 h-3 rounded-full bg-[#28C840] hover:bg-[#28C840]/80 shadow-[0_0_10px_rgba(40,200,64,0.3)] transition-all" />
                 </div>
-                <span className="font-mono text-[10px] md:text-xs text-white/30 uppercase tracking-[0.2em] select-none truncate px-4">{title}</span>
-                <div className="w-8 md:w-16" /> {/* Spacer for centering */}
+                <div className="flex-1 text-center overflow-hidden px-2">
+                     <span className="font-mono text-[10px] md:text-xs text-white/30 uppercase tracking-[0.2em] select-none truncate block">
+                        {title}
+                     </span>
+                </div>
+                <div className="w-8 md:w-16 min-w-[32px]" /> {/* Spacer for centering */}
             </div>
 
             {/* Content Area */}

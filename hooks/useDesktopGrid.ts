@@ -11,51 +11,89 @@ export const useDesktopGrid = () => {
         const isMobile = w < 640;
         const isTablet = w >= 640 && w < 1024;
         
-        // Grid Spacing - INCREASED STRIDES
-        const startX = isMobile ? 25 : 50;
-        const startY = isMobile ? 110 : 140;
+        // Grid Configuration
+        // Mobile: 2 Columns (Wider breathing room)
+        // Tablet: 4 Columns
+        // Desktop: Vertical Flow (Standard)
         
-        // Wider spacing to prevent circle overlap (Icon is ~96px on desktop)
-        const colStride = isMobile ? 110 : (isTablet ? 150 : 180);
-        const rowStride = isMobile ? 130 : (isTablet ? 170 : 200);
-        
-        // Trash Position (Bottom Right) - Pushed further to corner
-        const trashX = w - (isMobile ? 90 : 140);
-        const trashY = h - (isMobile ? 100 : 140);
+        let startX = 40;
+        let startY = 120;
+        let colStride = 120;
+        let rowStride = 130;
 
-        // Define Grid Positions
+        if (isMobile) {
+            startX = 30;
+            startY = 100;
+            colStride = 160; // Much wider spacing for 2 cols
+            rowStride = 120; // Tighter vertical packing
+        } else if (isTablet) {
+            startX = 40;
+            startY = 120;
+            colStride = 140;
+            rowStride = 150;
+        } else {
+            startX = 50;
+            startY = 140;
+            colStride = 140; 
+            rowStride = 160;
+        }
         
+        // Trash Position (Bottom Right)
+        const trashX = w - (isMobile ? 80 : 120);
+        const trashY = h - (isMobile ? 110 : 140);
+
         const getPos = (col: number, row: number) => ({
             x: startX + (col * colStride),
             y: startY + (row * rowStride)
         });
 
-        return [
-            // Column 1
-            { id: 'node', label: 'Story Network', ...getPos(0, 0), type: 'NODE' },
-            { id: 'launcher', label: 'IP Launcher', ...getPos(0, 1), type: 'APP' },
-            { id: 'manifesto', label: 'Manifesto.txt', ...getPos(0, 2), type: 'FILE' },
+        // Icon List
+        const iconDefs = [
+            { id: 'node', label: 'Story Network', type: 'NODE' },
+            { id: 'launcher', label: 'IP Launcher', type: 'APP' },
+            { id: 'manifesto', label: 'Manifesto.txt', type: 'FILE' },
+            { id: 'ao_terminal', label: 'AO Hyperbeam', type: 'ARWEAVE' },
+            { id: 'bazar', label: 'Bazar Mkt', type: 'MARKET' },
+            { id: 'draft', label: 'Draft_v1.txt', type: 'FILE' },
+            { id: 'music', label: 'Music', type: 'MUSIC', url: 'https://rcade.co/' },
+            { id: 'kb', label: 'Dojo', type: 'BOOK' },
+            { id: 'timer', label: 'Sprint', type: 'TIMER' },
+            { id: 'char_sheet', label: 'Hero Architect', type: 'SHEET' },
+        ];
 
-            // Column 2
-            { id: 'ao_terminal', label: 'AO Hyperbeam', ...getPos(1, 0), type: 'ARWEAVE' },
-            { id: 'bazar', label: 'Bazar Mkt', ...getPos(1, 1), type: 'MARKET' },
-            { id: 'draft', label: 'Draft_v1.txt', ...getPos(1, 2), type: 'FILE' },
+        // Layout Engine
+        const gridItems: IconData[] = [];
+        const itemsPerRow = isMobile ? 2 : (isTablet ? 4 : 2); // Desktop uses 2-col vertical flow on left usually
 
-            // Column 3 
-            // On mobile, col 2 might push off-screen if too wide, but with stride 110 it fits 3 cols in ~360px
-            { id: 'music', label: 'Music', ...getPos(isMobile ? 0 : 2, isMobile ? 3 : 0), type: 'MUSIC', url: 'https://rcade.co/' },
-            { id: 'kb', label: 'Dojo', ...getPos(isMobile ? 1 : 2, isMobile ? 3 : 1), type: 'BOOK' },
-            { id: 'timer', label: 'Sprint', ...getPos(isMobile ? 2 : 2, isMobile ? 3 : 2), type: 'TIMER' },
-            { id: 'char_sheet', label: 'Hero Architect', ...getPos(isMobile ? 0 : 2, isMobile ? 4 : 3), type: 'SHEET' },
+        if (isMobile) {
+            // Mobile: Simple 2-column Grid
+            iconDefs.forEach((icon, index) => {
+                const col = index % 2;
+                const row = Math.floor(index / 2);
+                gridItems.push({ ...icon, ...getPos(col, row) } as IconData);
+            });
+        } else {
+            // Desktop/Tablet: Fill Column 1, then Column 2, etc. (Vertical Flow)
+            // Or Simple Grid. Let's stick to Grid for consistency.
+            // Desktop: 3 Columns max on left side
+            const maxRows = Math.floor((h - startY - 100) / rowStride);
+            const actualMaxRows = Math.max(3, maxRows); // Ensure at least 3 rows
             
-            // Trash is special
-            { id: 'trash', label: 'Burn', x: trashX, y: trashY, type: 'TRASH' }, 
-        ] as IconData[];
+            iconDefs.forEach((icon, index) => {
+                const col = Math.floor(index / actualMaxRows);
+                const row = index % actualMaxRows;
+                gridItems.push({ ...icon, ...getPos(col, row) } as IconData);
+            });
+        }
+            
+        // Add Trash
+        gridItems.push({ id: 'trash', label: 'Burn', x: trashX, y: trashY, type: 'TRASH' });
+
+        return gridItems;
     };
 
     const [icons, setIcons] = useState<IconData[]>([]);
 
-    // Initialize on mount to ensure window is available
     useEffect(() => {
         setIcons(calculateGrid());
     }, []);
@@ -65,16 +103,7 @@ export const useDesktopGrid = () => {
         const handleResize = () => {
             clearTimeout(timeoutId);
             timeoutId = setTimeout(() => {
-                setIcons(prevIcons => {
-                    const newLayout = calculateGrid();
-                    // Preserve user-dragged positions if they differ significantly? 
-                    // For now, snap back to grid on resize to keep it clean for XR/Mobile rotation.
-                    return newLayout.map(newIcon => {
-                        // Optional: Check if icon was manually moved. 
-                        // For simplicity in this demo, we re-flow the grid.
-                        return newIcon;
-                    });
-                });
+                setIcons(calculateGrid());
             }, 200);
         };
 

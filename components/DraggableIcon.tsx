@@ -55,19 +55,49 @@ const DraggableIcon: React.FC<DraggableIconProps> = ({ iconData, onUpdatePos, on
         else onDragEnd(iconData.id);
     };
 
-    // The "Glass Sphere" Skin Configuration
-    // Replicating the glossy bubble look from the reference image
-    // Updated: w-20 (80px) on mobile, w-24 (96px) on desktop to help with spacing
+    // Color Palette - Used for the subtle hover glow
+    const getIconColor = (type: string) => {
+        switch(type) {
+            case 'NODE': return '#FF5733'; // Story Orange
+            case 'APP': return '#38BDF8'; // Sky Blue
+            case 'TRASH': return '#A1A1AA'; // Zinc
+            case 'FOLDER': return '#60A5FA'; // Blue
+            case 'MUSIC': return '#F472B6'; // Pink
+            case 'SHOPPING': return '#F43F5E'; // Rose
+            case 'TIMER': return '#2DD4BF'; // Teal
+            case 'BOOK': return '#A78BFA'; // Violet
+            case 'ARWEAVE': return '#4ADE80'; // Green
+            case 'MARKET': return '#FBBF24'; // Amber
+            case 'SHEET': return '#F87171'; // Red
+            case 'FILE': return '#E4E4E7'; // Zinc
+            default: return '#E4E4E7';
+        }
+    }
+
+    const iconColor = getIconColor(iconData.type);
+
+    // Nintendo Minimalist Aesthetic
+    // - Circular
+    // - Very subtle, low opacity background
+    // - High blur for that "frosted" look
+    // - Muted icons that saturate on hover
     const sphereClasses = `
         w-20 h-20 md:w-24 md:h-24 rounded-full
-        bg-black/60
-        border border-white/10
-        relative flex items-center justify-center
-        transition-all duration-300
-        shadow-[0_10px_30px_rgba(0,0,0,0.5),_inset_0_4px_20px_rgba(255,255,255,0.1),_inset_0_-10px_20px_rgba(0,0,0,0.8)]
-        group-hover:shadow-[0_0_30px_rgba(255,255,255,0.15),_inset_0_4px_20px_rgba(255,255,255,0.2),_inset_0_-10px_20px_rgba(0,0,0,0.8)]
-        group-hover:scale-105
-        group-hover:border-white/30
+        bg-white/[0.02] backdrop-blur-md
+        border border-white/[0.08]
+        flex items-center justify-center
+        relative
+        transition-all duration-500 ease-out
+        shadow-[0_4px_24px_rgba(0,0,0,0.1)]
+        
+        /* Interactive State: Subtle Glow & Lift */
+        group-hover:scale-110 
+        group-hover:-translate-y-2
+        group-hover:bg-white/[0.08]
+        group-hover:border-white/[0.2]
+        group-hover:shadow-[0_10px_40px_rgba(0,0,0,0.3),_inset_0_0_20px_rgba(255,255,255,0.05)]
+        
+        active:scale-95 active:duration-100
     `;
 
     return (
@@ -75,16 +105,18 @@ const DraggableIcon: React.FC<DraggableIconProps> = ({ iconData, onUpdatePos, on
             onMouseDown={handleMouseDown}
             onMouseEnter={onHover}
             style={{ left: iconData.x, top: iconData.y }}
-            className="absolute flex flex-col items-center gap-3 p-2 cursor-pointer group z-10 hover:z-50 active:z-50 touch-none"
+            className="absolute flex flex-col items-center gap-3 p-2 cursor-pointer group z-10 hover:z-50 active:z-50 touch-none select-none"
         >
-            {/* GLASS ORB CONTAINER */}
+            {/* Minimalist Sphere Container */}
             <div className={sphereClasses}>
                  
-                 {/* Specular Highlight (The Shine) */}
-                 <div className="absolute top-0 left-0 right-0 h-1/2 rounded-t-full bg-gradient-to-b from-white/10 to-transparent pointer-events-none opacity-50" />
-                 
-                 {/* Inner Icon - Responsive Size */}
-                 <div className="relative z-10 w-10 h-10 md:w-12 md:h-12 filter drop-shadow-[0_4px_4px_rgba(0,0,0,0.5)]">
+                 {/* Inner Icon - Muted (Grayscale) by default, Full Color on Hover */}
+                 <div className="
+                    relative z-10 w-9 h-9 md:w-11 md:h-11 
+                    transition-all duration-500 
+                    opacity-50 grayscale brightness-125
+                    group-hover:opacity-100 group-hover:grayscale-0 group-hover:scale-110
+                 ">
                      {iconData.iconImage ? (
                         <img 
                             src={iconData.iconImage} 
@@ -93,16 +125,20 @@ const DraggableIcon: React.FC<DraggableIconProps> = ({ iconData, onUpdatePos, on
                         />
                     ) : (
                         <IconComponent 
-                            className="w-full h-full" 
-                            // Force white/bright colors for better contrast inside the dark sphere
-                            color={iconData.type === 'FOLDER' ? '#3b82f6' : '#e4e4e7'} 
+                            className="w-full h-full drop-shadow-md" 
+                            color={iconColor}
                         />
                     )}
                  </div>
             </div>
             
-            {/* Label - Pixel Font Update */}
-            <span className="font-pixel text-[10px] md:text-xs tracking-widest text-white/80 drop-shadow-md bg-black/40 px-2 py-1 rounded-md backdrop-blur-sm group-hover:text-white transition-colors uppercase max-w-[120px] text-center leading-tight truncate">
+            {/* Label - Clean text, no box */}
+            <span className="
+                font-pixel text-[10px] md:text-xs tracking-[0.2em] text-white/30 
+                group-hover:text-white transition-colors duration-300 uppercase 
+                max-w-[100px] text-center leading-tight truncate
+                drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]
+            ">
                 {iconData.label}
             </span>
         </div>
