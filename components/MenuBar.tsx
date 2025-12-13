@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useWalletContext } from '../contexts/WalletContext';
 
@@ -7,7 +8,8 @@ const MenuBar: React.FC = () => {
     return (
         <div className="absolute top-8 left-1/2 -translate-x-1/2 h-14 px-8 rounded-full bg-[#1c1c1e]/60 backdrop-blur-xl border border-white/10 z-50 flex items-center gap-10 shadow-[0_8px_32px_rgba(0,0,0,0.3)] transition-transform hover:scale-[1.02] hover:bg-[#1c1c1e]/80">
             <div className="flex items-center gap-2">
-                <span className="font-bold text-lg tracking-tight text-white drop-shadow-md">STORY<span className="text-[#F7931A]/80 font-normal"> OS</span></span>
+                {/* Updated to font-pixel for Retro OS look */}
+                <span className="font-pixel font-bold text-xl tracking-widest text-white drop-shadow-md">STORY<span className="text-[#F7931A]/80 font-normal">OS</span></span>
             </div>
             
             <div className="flex gap-1">

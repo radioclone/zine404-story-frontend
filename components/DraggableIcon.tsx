@@ -1,3 +1,4 @@
+
 import React, { useRef } from 'react';
 import { IconData } from '../types';
 import { PixelIcons } from './PixelIcons';
@@ -21,6 +22,9 @@ const DraggableIcon: React.FC<DraggableIconProps> = ({ iconData, onUpdatePos, on
     if (iconData.type === 'SHOPPING') IconComponent = PixelIcons.Shopping;
     if (iconData.type === 'TIMER') IconComponent = PixelIcons.Timer;
     if (iconData.type === 'BOOK') IconComponent = PixelIcons.Book;
+    if (iconData.type === 'ARWEAVE') IconComponent = PixelIcons.ArweaveTerminal;
+    if (iconData.type === 'MARKET') IconComponent = PixelIcons.Market;
+    if (iconData.type === 'SHEET') IconComponent = PixelIcons.D20;
 
     const dragging = useRef(false);
     const offset = useRef({ x: 0, y: 0 });
@@ -51,69 +55,53 @@ const DraggableIcon: React.FC<DraggableIconProps> = ({ iconData, onUpdatePos, on
         else onDragEnd(iconData.id);
     };
 
-    const isLauncher = iconData.type === 'APP';
+    // The "Glass Sphere" Skin Configuration
+    // Replicating the glossy bubble look from the reference image
+    const sphereClasses = `
+        w-24 h-24 rounded-full
+        bg-black/60
+        border border-white/10
+        relative flex items-center justify-center
+        transition-all duration-300
+        shadow-[0_10px_30px_rgba(0,0,0,0.5),_inset_0_4px_20px_rgba(255,255,255,0.1),_inset_0_-10px_20px_rgba(0,0,0,0.8)]
+        group-hover:shadow-[0_0_30px_rgba(255,255,255,0.15),_inset_0_4px_20px_rgba(255,255,255,0.2),_inset_0_-10px_20px_rgba(0,0,0,0.8)]
+        group-hover:scale-105
+        group-hover:border-white/30
+    `;
 
     return (
         <div 
             onMouseDown={handleMouseDown}
             onMouseEnter={onHover}
             style={{ left: iconData.x, top: iconData.y }}
-            className="absolute flex flex-col items-center gap-3 p-2 cursor-pointer group z-10 w-28 md:w-40 lg:w-48 touch-none"
+            className="absolute flex flex-col items-center gap-3 p-2 cursor-pointer group z-10 touch-none"
         >
-            <div className={`
-                w-24 h-24 md:w-32 md:h-32 lg:w-40 lg:h-40 flex items-center justify-center relative transition-all duration-300 ease-out
-                group-hover:-translate-y-2 group-active:scale-95
-            `}>
-                {/* Bitcoin Orange Glow Effect - Refined for subtlety */}
-                 <div className={`
-                    absolute inset-0 blur-xl transition-all duration-500 rounded-full
-                    ${isLauncher 
-                        ? 'bg-[#F7931A]/0 group-hover:bg-[#F7931A]/30' // Subtle glow on hover
-                        : 'bg-white/0'
-                    }
-                `} />
-                
-                {isLauncher ? (
-                     <div className="relative w-full h-full rounded-full border border-white/10 bg-[#1c1c1e]/60 backdrop-blur-md flex items-center justify-center group-hover:border-[#F7931A]/50 transition-colors shadow-lg">
-                        {/* Inner Ring */}
-                         <div className="absolute inset-1 rounded-full border border-white/5 group-hover:border-[#F7931A]/20 transition-colors" />
-                         
-                         {iconData.iconImage ? (
-                            <img 
-                                src={iconData.iconImage} 
-                                alt={iconData.label} 
-                                className="w-16 h-16 md:w-20 md:h-20 lg:w-24 lg:h-24 object-contain drop-shadow-lg relative z-10" 
-                                style={{ imageRendering: 'pixelated' }}
-                            />
-                        ) : (
-                            <IconComponent className="w-12 h-12 md:w-16 md:h-16 lg:w-20 lg:h-20 relative z-10 text-[#F7931A] drop-shadow-[0_0_10px_rgba(247,147,26,0.5)]" />
-                        )}
-                     </div>
-                ) : (
-                    <>
-                        {iconData.iconImage ? (
-                            <img 
-                                src={iconData.iconImage} 
-                                alt={iconData.label} 
-                                className="w-20 h-20 md:w-28 md:h-28 lg:w-36 lg:h-36 object-contain drop-shadow-2xl relative z-10"
-                                style={{ imageRendering: 'pixelated' }} 
-                            />
-                        ) : (
-                            // Pixel Art Desktop Icons - SCALED UP
-                            <IconComponent className="w-20 h-20 md:w-28 md:h-28 lg:w-36 lg:h-36 relative z-10 text-white/90 drop-shadow-2xl group-hover:scale-105 group-hover:text-white transition-all duration-300" />
-                        )}
-                    </>
-                )}
+            {/* GLASS ORB CONTAINER */}
+            <div className={sphereClasses}>
+                 
+                 {/* Specular Highlight (The Shine) */}
+                 <div className="absolute top-0 left-0 right-0 h-1/2 rounded-t-full bg-gradient-to-b from-white/10 to-transparent pointer-events-none opacity-50" />
+                 
+                 {/* Inner Icon */}
+                 <div className="relative z-10 w-12 h-12 filter drop-shadow-[0_4px_4px_rgba(0,0,0,0.5)]">
+                     {iconData.iconImage ? (
+                        <img 
+                            src={iconData.iconImage} 
+                            alt={iconData.label} 
+                            className="w-full h-full object-contain" 
+                        />
+                    ) : (
+                        <IconComponent 
+                            className="w-full h-full" 
+                            // Force white/bright colors for better contrast inside the dark sphere
+                            color={iconData.type === 'FOLDER' ? '#3b82f6' : '#e4e4e7'} 
+                        />
+                    )}
+                 </div>
             </div>
             
-            <span className={`
-                font-mono text-xs md:text-sm lg:text-base font-medium px-3 py-1.5 rounded-md backdrop-blur-md border transition-all duration-300
-                shadow-lg max-w-full break-words text-center leading-tight select-none tracking-wide
-                ${isLauncher 
-                    ? 'bg-[#F7931A]/80 border-[#F7931A]/50 text-white shadow-[#F7931A]/20 group-hover:bg-[#F7931A] group-hover:shadow-[#F7931A]/40 group-hover:scale-105' 
-                    : 'bg-black/40 border-white/5 text-white/80 group-hover:bg-black/70 group-hover:border-white/20 group-hover:text-white group-hover:scale-105'
-                }
-            `}>
+            {/* Label - Pixel Font Update */}
+            <span className="font-pixel text-[10px] md:text-xs tracking-widest text-white/80 drop-shadow-md bg-black/40 px-2 py-1 rounded-md backdrop-blur-sm group-hover:text-white transition-colors uppercase">
                 {iconData.label}
             </span>
         </div>

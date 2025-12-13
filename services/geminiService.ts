@@ -1,3 +1,4 @@
+
 import { GoogleGenAI, Type, Schema } from "@google/genai";
 import { AgentMessage, DraftContent } from "../types";
 
@@ -110,4 +111,70 @@ export const consultAgent = async (
         content: "CONNECTION INTERRUPTED. UNABLE TO PROCESS LEGAL PARAMETERS." 
     };
   }
+};
+
+// --- LICENSE STRATEGY ADVISOR ---
+
+export interface LicenseSuggestion {
+    type: 'NON_COMMERCIAL_REMIX' | 'COMMERCIAL_USE';
+    commercialRevShare?: number;
+    price?: string;
+    reasoning: string;
+}
+
+const LICENSE_SUGGESTION_SCHEMA: Schema = {
+  type: Type.OBJECT,
+  properties: {
+    type: { 
+        type: Type.STRING, 
+        enum: ['NON_COMMERCIAL_REMIX', 'COMMERCIAL_USE'],
+        description: "The recommended license type."
+    },
+    commercialRevShare: { 
+        type: Type.INTEGER, 
+        description: "Recommended revenue share percentage (0-100)." 
+    },
+    price: {
+        type: Type.STRING,
+        description: "Recommended upfront minting fee (e.g. '10')."
+    },
+    reasoning: {
+        type: Type.STRING,
+        description: "Explanation of the recommendation."
+    }
+  },
+  required: ["type", "reasoning"]
+};
+
+export const suggestLicenseTerms = async (title: string, description: string): Promise<LicenseSuggestion | null> => {
+    const ai = getClient();
+    if (!ai) return null;
+
+    const prompt = `
+        Analyze this IP asset and suggest a licensing strategy (Story Protocol).
+        Title: ${title}
+        Description: ${description || "No description provided."}
+        
+        Guide:
+        - Viral/Community focus -> NON_COMMERCIAL_REMIX
+        - Franchise/Sales focus -> COMMERCIAL_USE
+    `;
+
+    try {
+        const response = await ai.models.generateContent({
+            model: 'gemini-2.5-flash',
+            contents: prompt,
+            config: {
+                responseMimeType: "application/json",
+                responseSchema: LICENSE_SUGGESTION_SCHEMA
+            }
+        });
+        
+        const text = response.text;
+        if (!text) return null;
+        return JSON.parse(text) as LicenseSuggestion;
+    } catch (e) {
+        console.error("License AI Error", e);
+        return null;
+    }
 };

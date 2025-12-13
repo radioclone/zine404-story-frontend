@@ -3,7 +3,7 @@ import React from 'react';
 
 export type RegistrationStep = 'TYPE' | 'DETAILS' | 'CONTRIBUTORS' | 'LICENSING' | 'REVIEW';
 
-export type IconType = 'NODE' | 'APP' | 'TRASH' | 'FILE' | 'FOLDER' | 'MUSIC' | 'SHOPPING' | 'TIMER' | 'BOOK';
+export type IconType = 'NODE' | 'APP' | 'TRASH' | 'FILE' | 'FOLDER' | 'MUSIC' | 'SHOPPING' | 'TIMER' | 'BOOK' | 'ARWEAVE' | 'MARKET' | 'SHEET';
 
 export interface IconData {
     id: string;
@@ -28,6 +28,7 @@ export interface LicenseConfig {
     derivativesAllowed: boolean;
     attribution: boolean;
     aiTrainingAllowed: boolean; // "Commercial Remix" AI permission
+    useUdl: boolean; // New: Arweave Universal Data License
 }
 
 export interface IPAsset {

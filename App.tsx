@@ -8,6 +8,8 @@ import TimerWidget from './components/TimerWidget';
 import IpLauncher from './components/IpLauncher';
 import KnowledgeBase from './components/KnowledgeBase';
 import ElevenLabsWidget from './components/ElevenLabsWidget';
+import ArweaveTerminal from './components/ArweaveTerminal';
+import CharacterSheet from './components/CharacterSheet';
 import { useSoundContext } from './contexts/SoundContext';
 import { useWalletContext } from './contexts/WalletContext';
 import { useDesktopGrid } from './hooks/useDesktopGrid';
@@ -43,6 +45,8 @@ const App: React.FC = () => {
     const [openDocId, setOpenDocId] = useState<string | null>(null);
     const [showTimer, setShowTimer] = useState(false);
     const [showKnowledgeBase, setShowKnowledgeBase] = useState(false);
+    const [showArweaveTerminal, setShowArweaveTerminal] = useState(false);
+    const [showCharacterSheet, setShowCharacterSheet] = useState(false);
     
     // --- HOOKS & CONTEXTS ---
     const { playClick, playIgnition, playHover } = useSoundContext();
@@ -86,6 +90,15 @@ const App: React.FC = () => {
         } else if (icon.id === 'kb') {
             playClick();
             setShowKnowledgeBase(true);
+        } else if (icon.id === 'ao_terminal') {
+            playClick();
+            setShowArweaveTerminal(true);
+        } else if (icon.id === 'bazar') {
+             playClick();
+             window.open('https://bazar.arweave.net', '_blank');
+        } else if (icon.id === 'char_sheet') {
+            playClick();
+            setShowCharacterSheet(true);
         } else {
             playClick();
         }
@@ -99,7 +112,7 @@ const App: React.FC = () => {
 
             <MenuBar />
 
-            <div className={`absolute inset-0 z-10 transition-all duration-700 pt-10 ${viewMode === 'LAUNCHER' || openDocId || showKnowledgeBase ? 'scale-105 blur-[8px] opacity-30 pointer-events-none' : 'scale-100 opacity-100'}`}>
+            <div className={`absolute inset-0 z-10 transition-all duration-700 pt-10 ${viewMode === 'LAUNCHER' || openDocId || showKnowledgeBase || showArweaveTerminal || showCharacterSheet ? 'scale-105 blur-[8px] opacity-30 pointer-events-none' : 'scale-100 opacity-100'}`}>
                 {icons.map(icon => (
                     <DraggableIcon 
                         key={icon.id} 
@@ -143,6 +156,14 @@ const App: React.FC = () => {
             </div>
             
             {showTimer && <TimerWidget onClose={() => setShowTimer(false)} />}
+            
+            {showArweaveTerminal && (
+                <ArweaveTerminal onClose={() => setShowArweaveTerminal(false)} />
+            )}
+
+            {showCharacterSheet && (
+                <CharacterSheet onClose={() => setShowCharacterSheet(false)} />
+            )}
 
             {(openDocId === 'draft' || openDocId === 'manifesto') && (
                 <WriterRoom 

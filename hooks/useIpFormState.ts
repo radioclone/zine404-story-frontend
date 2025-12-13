@@ -6,6 +6,7 @@ export const useIpFormState = (walletAddress: string | null) => {
     const [activeStep, setActiveStep] = useState<string>('TYPE');
     const [registrationType, setRegistrationType] = useState<'NEW' | 'REMIX' | null>(null);
     const [title, setTitle] = useState("Untitled Asset");
+    const [description, setDescription] = useState("");
     
     const [contributors, setContributors] = useState<Creator[]>([
         { address: walletAddress || '', percentage: 100 }
@@ -57,6 +58,8 @@ export const useIpFormState = (walletAddress: string | null) => {
         setRegistrationType,
         title,
         setTitle,
+        description,
+        setDescription,
         contributors,
         handleAddContributor,
         handleUpdateContributor,
