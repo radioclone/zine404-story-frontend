@@ -124,10 +124,13 @@ const WriterRoom: React.FC<WriterRoomProps> = ({
 
     return (
         <WindowFrame title="Writer's Room" onClose={onClose}>
-            <div className="flex w-full h-full relative">
+            <div className="flex w-full h-full relative overflow-hidden">
+                
                 {/* --- MAIN EDITOR --- */}
-                <div className="flex-1 flex flex-col p-8 bg-transparent relative">
-                    <div className="flex items-center justify-between mb-6">
+                <div className={`flex-1 flex flex-col p-8 bg-transparent relative transition-all duration-1000 ease-in-out ${isFocusOn ? 'scale-[1.02]' : ''}`}>
+                    
+                    {/* Header Controls - Fade out in Focus Mode */}
+                    <div className={`flex items-center justify-between mb-6 transition-all duration-700 ${isFocusOn ? 'opacity-0 hover:opacity-100' : 'opacity-100'}`}>
                         <div className="flex items-center gap-6">
                              <div className="flex items-center gap-3">
                                  <div className="w-2 h-8 bg-[#F7931A]" />
@@ -169,7 +172,7 @@ const WriterRoom: React.FC<WriterRoomProps> = ({
                                 onClick={handleFocusToggle}
                                 className={`px-4 py-2 rounded-full border text-sm font-mono flex items-center gap-2 transition-all ${isFocusOn ? 'bg-[#F7931A]/20 border-[#F7931A] text-[#F7931A]' : 'border-white/20 text-white/50 hover:bg-white/10'}`}
                             >
-                                <span className={isFocusOn ? "animate-pulse" : ""}>●</span> FOCUS_AUDIO
+                                <span className={isFocusOn ? "animate-pulse" : ""}>●</span> FOCUS MODE
                             </button>
                         </div>
                     </div>
@@ -179,7 +182,17 @@ const WriterRoom: React.FC<WriterRoomProps> = ({
                             value={content}
                             onChange={(e) => setContent(e.target.value)}
                             onSelect={handleSelectionChange}
-                            className="flex-1 bg-black/20 rounded-xl p-8 text-lg font-mono leading-relaxed text-white/80 resize-none outline-none border border-white/5 focus:border-white/20 transition-all shadow-inner custom-scrollbar relative z-10 selection:bg-[#F7931A]/40"
+                            className={`
+                                flex-1 rounded-xl p-8 text-lg font-mono leading-relaxed resize-none outline-none 
+                                transition-all duration-500 ease-out
+                                custom-scrollbar relative z-10 
+                                selection:bg-[#F7931A]/40
+                                
+                                ${isFocusOn 
+                                    ? 'bg-black/40 text-white/90 border-white/10 shadow-[0_0_100px_rgba(0,0,0,0.8)]' 
+                                    : 'bg-white/[0.02] text-white/60 border-white/[0.05] hover:bg-white/[0.04] focus:bg-white/[0.06] focus:text-white/90 focus:border-white/20 focus:shadow-[0_0_30px_rgba(255,255,255,0.05)] focus:scale-[1.005]'
+                                }
+                            `}
                             placeholder="Start typing your story..."
                         />
                         
@@ -207,17 +220,25 @@ const WriterRoom: React.FC<WriterRoomProps> = ({
                 </div>
 
                 {/* --- CHAT SIDEBAR --- */}
-                <ChatSidebar 
-                    isConnected={isConnected}
-                    connect={() => connect(content)}
-                    disconnect={disconnect}
-                    messages={messages}
-                    realtimeInput={realtimeInput}
-                    realtimeOutput={realtimeOutput}
-                    onSendMessage={sendTextMessage}
-                    isSpeaking={isSpeaking}
-                    volume={volume}
-                />
+                {/* Dims and blurs in Focus Mode */}
+                <div className={`
+                    border-l border-white/5 h-full transition-all duration-1000 ease-in-out
+                    ${isFocusOn ? 'w-0 opacity-0 overflow-hidden' : 'w-80 opacity-100'}
+                `}>
+                     <div className="w-80 h-full">
+                        <ChatSidebar 
+                            isConnected={isConnected}
+                            connect={() => connect(content)}
+                            disconnect={disconnect}
+                            messages={messages}
+                            realtimeInput={realtimeInput}
+                            realtimeOutput={realtimeOutput}
+                            onSendMessage={sendTextMessage}
+                            isSpeaking={isSpeaking}
+                            volume={volume}
+                        />
+                    </div>
+                </div>
             </div>
         </WindowFrame>
     );

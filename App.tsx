@@ -83,7 +83,7 @@ const App: React.FC = () => {
             setOpenDocId('draft'); 
         } else if (icon.type === 'NODE') {
             playClick();
-            window.open('https://portal.story.foundation/', '_blank');
+            window.open('https://www.story.foundation/', '_blank');
         } else if (icon.id === 'timer') {
             playClick();
             setShowTimer(prev => !prev);
@@ -153,7 +153,7 @@ const App: React.FC = () => {
                                     drop-shadow-[0_2px_10px_rgba(0,0,0,1)]
                                     group-hover:text-white group-hover:tracking-[0.35em] transition-all duration-500
                                 ">
-                                    SYNC PROTOCOL
+                                    CONNECT WALLET
                                 </span>
                             </div>
                         </div>

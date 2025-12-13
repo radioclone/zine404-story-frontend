@@ -74,6 +74,9 @@ const IpLauncher: React.FC<IpLauncherProps> = ({ onClose }) => {
     // Helper for address validation
     const isValidAddress = (addr: string) => /^0x[a-fA-F0-9]{40}$/.test(addr);
 
+    // Shared Styles for "Enhanced Focus" Inputs
+    const inputClasses = "w-full bg-white/[0.02] text-white/60 border border-white/[0.05] rounded-xl px-4 md:px-6 py-3 md:py-4 font-mono text-base md:text-lg focus:outline-none focus:bg-white/[0.06] focus:text-white focus:border-white/20 focus:shadow-[0_0_30px_rgba(255,255,255,0.05)] transition-all duration-300 placeholder-white/20";
+    
     return (
         <WindowFrame title="Register IP" onClose={onClose}>
             <div className="flex flex-col md:flex-row w-full h-full relative">
@@ -179,7 +182,8 @@ const IpLauncher: React.FC<IpLauncherProps> = ({ onClose }) => {
                                             type="text" 
                                             value={title}
                                             onChange={(e) => setTitle(e.target.value)}
-                                            className="w-full h-14 md:h-16 bg-black/20 border border-white/10 rounded-2xl px-6 text-lg md:text-xl text-white focus:outline-none focus:border-white focus:shadow-[0_0_25px_rgba(255,255,255,0.3)] transition-all duration-300 shadow-inner"
+                                            className={inputClasses}
+                                            placeholder="The Neon Samurai"
                                         />
                                     </div>
 
@@ -188,7 +192,7 @@ const IpLauncher: React.FC<IpLauncherProps> = ({ onClose }) => {
                                         <textarea 
                                             value={description}
                                             onChange={(e) => setDescription(e.target.value)}
-                                            className="w-full h-32 md:h-32 bg-black/20 border border-white/10 rounded-2xl p-6 text-base md:text-lg text-white focus:outline-none focus:border-white focus:shadow-[0_0_25px_rgba(255,255,255,0.3)] transition-all duration-300 shadow-inner resize-none custom-scrollbar"
+                                            className={`${inputClasses} h-32 md:h-40 resize-none`}
                                             placeholder="A brief description of your story..."
                                         />
                                     </div>
@@ -199,7 +203,7 @@ const IpLauncher: React.FC<IpLauncherProps> = ({ onClose }) => {
                                             <input 
                                                 type="text" 
                                                 placeholder="0x..." 
-                                                className="w-full h-14 md:h-16 bg-black/20 border border-white/10 rounded-2xl px-6 text-xl text-white font-mono focus:outline-none focus:border-white focus:shadow-[0_0_25px_rgba(255,255,255,0.3)] transition-all duration-300 shadow-inner"
+                                                className={inputClasses}
                                             />
                                         </div>
                                     )}
@@ -252,7 +256,7 @@ const IpLauncher: React.FC<IpLauncherProps> = ({ onClose }) => {
                                                         value={c.address}
                                                         onChange={(e) => handleUpdateContributor(idx, 'address', e.target.value)}
                                                         placeholder="0x..."
-                                                        className={`w-full bg-black/20 border rounded-xl px-4 py-3 font-mono text-white text-sm md:text-base focus:outline-none transition-all duration-300 ${!isValid ? 'border-red-500/50 focus:border-red-500' : 'border-white/10 focus:border-white focus:shadow-[0_0_25px_rgba(255,255,255,0.3)]'}`}
+                                                        className={`${inputClasses} py-2 md:py-3 ${!isValid ? 'border-red-500/50 focus:border-red-500' : ''}`}
                                                     />
                                                 </div>
                                                 <div className="flex gap-4 w-full md:w-auto items-end">
@@ -263,7 +267,7 @@ const IpLauncher: React.FC<IpLauncherProps> = ({ onClose }) => {
                                                                 type="number" 
                                                                 value={c.percentage}
                                                                 onChange={(e) => handleUpdateContributor(idx, 'percentage', e.target.value)}
-                                                                className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 font-mono text-white text-right focus:outline-none focus:border-white focus:shadow-[0_0_25px_rgba(255,255,255,0.3)] transition-all duration-300"
+                                                                className={`${inputClasses} py-2 md:py-3 text-right`}
                                                             />
                                                             <span className="absolute right-8 top-1/2 -translate-y-1/2 text-white/20 pointer-events-none">%</span>
                                                         </div>
@@ -336,6 +340,14 @@ const IpLauncher: React.FC<IpLauncherProps> = ({ onClose }) => {
                                         <div className="text-3xl mb-4">🎁</div>
                                         <h3 className="text-xl font-bold text-white mb-2">Social Remix</h3>
                                         <p className="text-sm text-white/50 mb-4">Non-Commercial Use. Great for viral growth and community building.</p>
+                                        
+                                        {/* Tooltip */}
+                                        <div className="absolute top-full mt-4 left-0 w-full p-4 bg-black/90 border border-white/20 rounded-xl text-xs text-white/70 backdrop-blur-md opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 shadow-xl">
+                                            <p className="font-mono">
+                                                <strong className="text-white block mb-1">IMPLICATIONS:</strong>
+                                                Free remixing allowed. Attribution required. Viral-friendly License (CC-BY-NC-SA style).
+                                            </p>
+                                        </div>
                                     </button>
 
                                     <button 
@@ -345,6 +357,14 @@ const IpLauncher: React.FC<IpLauncherProps> = ({ onClose }) => {
                                         <div className="text-3xl mb-4">💼</div>
                                         <h3 className="text-xl font-bold text-white mb-2">Commercial</h3>
                                         <p className="text-sm text-white/50 mb-4">Monetize derivatives. Set an upfront fee and revenue share.</p>
+
+                                        {/* Tooltip */}
+                                        <div className="absolute top-full mt-4 left-0 w-full p-4 bg-black/90 border border-white/20 rounded-xl text-xs text-white/70 backdrop-blur-md opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 shadow-xl">
+                                            <p className="font-mono">
+                                                <strong className="text-white block mb-1">IMPLICATIONS:</strong>
+                                                Requires payment to remix. Revenue flows automatically to your wallet. Enforces royalties on-chain.
+                                            </p>
+                                        </div>
                                     </button>
                                 </div>
 
@@ -357,7 +377,7 @@ const IpLauncher: React.FC<IpLauncherProps> = ({ onClose }) => {
                                                     type="text" 
                                                     value={licenseData.price}
                                                     onChange={(e) => setLicenseData({...licenseData, price: e.target.value})}
-                                                    className="w-full h-14 bg-black/20 border border-white/10 rounded-xl px-4 text-white font-mono focus:outline-none focus:border-white focus:shadow-[0_0_25px_rgba(255,255,255,0.3)] transition-all duration-300"
+                                                    className={inputClasses}
                                                 />
                                             </div>
                                             <div>
@@ -366,7 +386,7 @@ const IpLauncher: React.FC<IpLauncherProps> = ({ onClose }) => {
                                                     type="number" 
                                                     value={licenseData.commercialRevShare}
                                                     onChange={(e) => setLicenseData({...licenseData, commercialRevShare: Number(e.target.value)})}
-                                                    className="w-full h-14 bg-black/20 border border-white/10 rounded-xl px-4 text-white font-mono focus:outline-none focus:border-white focus:shadow-[0_0_25px_rgba(255,255,255,0.3)] transition-all duration-300"
+                                                    className={inputClasses}
                                                 />
                                             </div>
                                         </div>
