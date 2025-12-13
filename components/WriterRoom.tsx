@@ -46,10 +46,12 @@ const WriterRoom: React.FC<WriterRoomProps> = ({
         realtimeInput,
         realtimeOutput,
         sendTextMessage,
-        updateContext
+        updateContext,
+        addMessage 
     } = useLiveAgent();
 
-    const { collaborators } = useSimulatedCollaboration(setContent);
+    // Pass addMessage to collaboration hook
+    const { collaborators } = useSimulatedCollaboration(setContent, addMessage);
     
     const { toggleFocusMusic } = useSoundContext();
     const [isFocusOn, setIsFocusOn] = useState(false);
@@ -129,7 +131,7 @@ const WriterRoom: React.FC<WriterRoomProps> = ({
                                             className={`
                                                 w-8 h-8 rounded-full border-2 border-[#1c1c1e] flex items-center justify-center text-[10px] font-bold text-black
                                                 transition-all duration-300
-                                                ${c.status === 'TYPING' ? 'animate-bounce' : ''}
+                                                ${c.status === 'TYPING' ? 'animate-bounce scale-110' : ''}
                                             `}
                                             style={{ backgroundColor: c.color }}
                                         >
@@ -142,7 +144,7 @@ const WriterRoom: React.FC<WriterRoomProps> = ({
                                         `}/>
                                         
                                         {/* Tooltip */}
-                                        <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 bg-black/80 px-2 py-1 rounded text-[10px] text-white opacity-0 group-hover:opacity-100 whitespace-nowrap pointer-events-none transition-opacity">
+                                        <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 bg-black/80 px-2 py-1 rounded text-[10px] text-white opacity-0 group-hover:opacity-100 whitespace-nowrap pointer-events-none transition-opacity z-50">
                                             {c.name} {c.status === 'TYPING' && '(Typing...)'}
                                         </div>
                                     </div>
@@ -169,9 +171,21 @@ const WriterRoom: React.FC<WriterRoomProps> = ({
                         <textarea 
                             value={content}
                             onChange={(e) => setContent(e.target.value)}
-                            className="flex-1 bg-black/20 rounded-xl p-8 text-lg font-mono leading-relaxed text-white/80 resize-none outline-none border border-white/5 focus:border-white/20 transition-all shadow-inner custom-scrollbar"
+                            className="flex-1 bg-black/20 rounded-xl p-8 text-lg font-mono leading-relaxed text-white/80 resize-none outline-none border border-white/5 focus:border-white/20 transition-all shadow-inner custom-scrollbar relative z-10"
                             placeholder="Start typing your story..."
                         />
+                        
+                        {/* Typing Indicator Overlay */}
+                         {collaborators.some(c => c.status === 'TYPING') && (
+                            <div className="absolute bottom-10 right-10 z-20 pointer-events-none flex items-center gap-2 bg-black/60 px-3 py-1.5 rounded-full border border-white/10 animate-fade-in-up">
+                                <div className="flex -space-x-1">
+                                    {collaborators.filter(c => c.status === 'TYPING').map(c => (
+                                        <div key={c.id} className="w-4 h-4 rounded-full border border-black" style={{ backgroundColor: c.color }} />
+                                    ))}
+                                </div>
+                                <span className="text-[10px] text-white/60 font-mono">Typing...</span>
+                            </div>
+                         )}
 
                         {/* --- AI SUGGESTION OVERLAY --- */}
                         {suggestion && (
@@ -250,6 +264,13 @@ const WriterRoom: React.FC<WriterRoomProps> = ({
                                         key={msg.id} 
                                         className={`flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'}`}
                                     >
+                                        {/* Collaborator Name Label */}
+                                        {msg.role === 'collaborator' && (
+                                            <span className="text-[10px] text-white/40 mb-1 ml-1" style={{ color: msg.color }}>
+                                                {msg.author}
+                                            </span>
+                                        )}
+                                        
                                         <div 
                                             className={`
                                                 max-w-[90%] p-3 rounded-2xl text-xs font-mono leading-relaxed relative
@@ -257,9 +278,12 @@ const WriterRoom: React.FC<WriterRoomProps> = ({
                                                     ? 'bg-white/10 text-white rounded-br-none' 
                                                     : msg.role === 'system' 
                                                         ? 'bg-transparent border border-white/10 text-white/50 w-full text-center italic'
-                                                        : 'bg-[#F7931A]/10 border border-[#F7931A]/30 text-[#F7931A] rounded-bl-none'
+                                                        : msg.role === 'collaborator'
+                                                            ? 'bg-white/5 border border-l-2 text-white/80 rounded-bl-none'
+                                                            : 'bg-[#F7931A]/10 border border-[#F7931A]/30 text-[#F7931A] rounded-bl-none'
                                                 }
                                             `}
+                                            style={msg.role === 'collaborator' ? { borderLeftColor: msg.color || 'white' } : {}}
                                         >
                                             {/* Special Visual for Dice Rolls */}
                                             {msg.role === 'system' && msg.data?.result ? (

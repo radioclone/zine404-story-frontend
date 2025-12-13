@@ -9,10 +9,12 @@ export interface MuzeSuggestion {
 
 export interface ChatMessage {
     id: string;
-    role: 'user' | 'model' | 'system';
+    role: 'user' | 'model' | 'system' | 'collaborator';
     text: string;
     isFinal?: boolean;
     data?: any; // For tool outputs like dice rolls
+    author?: string;
+    color?: string;
 }
 
 export const useLiveAgent = () => {
@@ -403,6 +405,10 @@ export const useLiveAgent = () => {
       });
   };
 
+  const addMessage = (message: ChatMessage) => {
+      setMessages(prev => [...prev, message]);
+  };
+
   useEffect(() => {
       return () => disconnect();
   }, []);
@@ -419,6 +425,7 @@ export const useLiveAgent = () => {
       realtimeInput,
       realtimeOutput,
       sendTextMessage,
-      updateContext
+      updateContext,
+      addMessage
   };
 };

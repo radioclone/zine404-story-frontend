@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+
+import React, { useState } from 'react';
 import SpatialShell from './components/SpatialShell';
 import MenuBar from './components/MenuBar';
 import DraggableIcon from './components/DraggableIcon';
@@ -6,9 +7,10 @@ import WriterRoom from './components/WriterRoom';
 import TimerWidget from './components/TimerWidget';
 import IpLauncher from './components/IpLauncher';
 import KnowledgeBase from './components/KnowledgeBase';
+import ElevenLabsWidget from './components/ElevenLabsWidget';
 import { useSoundContext } from './contexts/SoundContext';
 import { useWalletContext } from './contexts/WalletContext';
-import { IconData } from './types';
+import { useDesktopGrid } from './hooks/useDesktopGrid';
 
 const IDEA_STATE_TEMPLATE = `IDEA STATE: [UNTITLED]
 -----------------------
@@ -42,65 +44,11 @@ const App: React.FC = () => {
     const [showTimer, setShowTimer] = useState(false);
     const [showKnowledgeBase, setShowKnowledgeBase] = useState(false);
     
-    // --- GLOBAL CONTEXTS ---
+    // --- HOOKS & CONTEXTS ---
     const { playClick, playIgnition, playHover } = useSoundContext();
     const { connect, address: walletAddress } = useWalletContext();
+    const { icons, updateIconPos } = useDesktopGrid();
 
-    // Responsive Grid Initializer
-    const getInitialIcons = (): IconData[] => {
-        const w = window.innerWidth;
-        const h = window.innerHeight;
-        const isMobile = w < 768;
-        const isTablet = w >= 768 && w < 1024;
-        
-        // Adjust grid strides based on icon size
-        const colStride = isMobile ? 100 : (isTablet ? 180 : 240);
-        const rowStride = isMobile ? 120 : (isTablet ? 180 : 240);
-        const startX = isMobile ? 20 : 60;
-        const startY = 120;
-
-        const trashX = w - (isMobile ? 100 : 250);
-        const trashY = h - (isMobile ? 160 : 250);
-
-        return [
-            { id: 'node', label: 'Story Network', x: startX, y: startY, type: 'NODE' },
-            { id: 'launcher', label: 'IP Launcher', x: startX, y: startY + rowStride, type: 'APP' },
-            
-            { id: 'manifesto', label: 'Manifesto.txt', x: startX + colStride, y: startY, type: 'FILE' },
-            { id: 'draft', label: 'Idea_State_v1.txt', x: startX + colStride, y: startY + rowStride, type: 'FILE' },
-            
-            { id: 'music', label: 'Rcade', x: startX + (colStride * 2), y: startY, type: 'MUSIC', url: 'https://rcade.co/' },
-            { id: 'timer', label: 'Sprint', x: startX + (colStride * 2), y: startY + rowStride, type: 'TIMER' },
-            
-            { id: 'shopping', label: 'Shopping', x: startX + (colStride * 3), y: startY, type: 'SHOPPING', url: 'https://ip.world/' },
-            { id: 'kb', label: 'Dojo', x: startX + (colStride * 3), y: startY + rowStride, type: 'BOOK' },
-            
-            { id: 'trash', label: 'Burn', x: trashX, y: trashY, type: 'TRASH' }, 
-        ];
-    };
-
-    const [icons, setIcons] = useState<IconData[]>(getInitialIcons());
-
-    useEffect(() => {
-        const handleResize = () => {
-            const w = window.innerWidth;
-            const h = window.innerHeight;
-            const isMobile = w < 768;
-            
-            const trashX = w - (isMobile ? 100 : 250);
-            const trashY = h - (isMobile ? 160 : 250);
-
-            setIcons(prev => prev.map(icon => 
-                icon.id === 'trash' 
-                    ? { ...icon, x: trashX, y: trashY } 
-                    : icon
-            ));
-        };
-
-        window.addEventListener('resize', handleResize);
-        return () => window.removeEventListener('resize', handleResize);
-    }, []);
-    
     const handleConnectWallet = async () => {
         playClick();
         await connect();
@@ -141,10 +89,6 @@ const App: React.FC = () => {
         } else {
             playClick();
         }
-    };
-
-    const updateIconPos = (id: string, x: number, y: number) => {
-        setIcons(prev => prev.map(icon => icon.id === id ? { ...icon, x, y } : icon));
     };
 
     return (
@@ -216,8 +160,7 @@ const App: React.FC = () => {
                 <IpLauncher onClose={() => setViewMode('DESKTOP')} />
             )}
             
-            {/* @ts-ignore */}
-            <elevenlabs-convai agent-id="agent_1901kcbdf52ses1s50nght71142d"></elevenlabs-convai>
+            <ElevenLabsWidget />
         </div>
     );
 };
