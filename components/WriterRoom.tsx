@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import WindowFrame from './WindowFrame';
 import { useLiveAgent } from '../hooks/useLiveAgent';
+import { useSimulatedCollaboration } from '../hooks/useSimulatedCollaboration';
 import { useSoundContext } from '../contexts/SoundContext';
 
 interface WriterRoomProps {
@@ -28,8 +29,12 @@ const WriterRoom: React.FC<WriterRoomProps> = ({
     initialContent = DEFAULT_CONTENT 
 }) => {
     const [content, setContent] = useState(initialContent);
+    const [lastSyncedContent, setLastSyncedContent] = useState(initialContent);
+    const [isSyncing, setIsSyncing] = useState(false);
 
     const [chatInput, setChatInput] = useState("");
+    
+    // --- HOOKS ---
     const { 
         connect, 
         disconnect, 
@@ -40,12 +45,30 @@ const WriterRoom: React.FC<WriterRoomProps> = ({
         messages,
         realtimeInput,
         realtimeOutput,
-        sendTextMessage
+        sendTextMessage,
+        updateContext
     } = useLiveAgent();
+
+    const { collaborators } = useSimulatedCollaboration(setContent);
     
     const { toggleFocusMusic } = useSoundContext();
     const [isFocusOn, setIsFocusOn] = useState(false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
+
+    // Debounced Context Sync
+    useEffect(() => {
+        if (!isConnected) return;
+        if (content === lastSyncedContent) return;
+
+        const timer = setTimeout(() => {
+            setIsSyncing(true);
+            updateContext(content);
+            setLastSyncedContent(content);
+            setTimeout(() => setIsSyncing(false), 1500); // Visual delay
+        }, 3000); // Sync after 3 seconds of inactivity
+
+        return () => clearTimeout(timer);
+    }, [content, isConnected, lastSyncedContent, updateContext]);
 
     // Auto-cleanup on close
     useEffect(() => {
@@ -87,10 +110,51 @@ const WriterRoom: React.FC<WriterRoomProps> = ({
                 {/* --- MAIN EDITOR --- */}
                 <div className="flex-1 flex flex-col p-8 bg-transparent relative">
                     <div className="flex items-center justify-between mb-6">
-                        <div className="flex items-center gap-3">
-                             <div className="w-2 h-8 bg-[#F7931A]" />
-                             <h2 className="text-2xl font-bold text-white/90">{initialTitle}</h2>
+                        <div className="flex items-center gap-6">
+                             <div className="flex items-center gap-3">
+                                 <div className="w-2 h-8 bg-[#F7931A]" />
+                                 <h2 className="text-2xl font-bold text-white/90">{initialTitle}</h2>
+                                 {isSyncing && (
+                                    <span className="text-[10px] font-mono text-[#F7931A] animate-pulse ml-2 px-2 py-1 rounded bg-[#F7931A]/10 border border-[#F7931A]/20">
+                                        READING_CHANGES...
+                                    </span>
+                                 )}
+                             </div>
+
+                             {/* COLLABORATORS UI */}
+                             <div className="flex -space-x-2 items-center">
+                                {collaborators.map(c => (
+                                    <div key={c.id} className="relative group cursor-pointer">
+                                        <div 
+                                            className={`
+                                                w-8 h-8 rounded-full border-2 border-[#1c1c1e] flex items-center justify-center text-[10px] font-bold text-black
+                                                transition-all duration-300
+                                                ${c.status === 'TYPING' ? 'animate-bounce' : ''}
+                                            `}
+                                            style={{ backgroundColor: c.color }}
+                                        >
+                                            {c.initials}
+                                        </div>
+                                        {/* Status Dot */}
+                                        <div className={`
+                                            absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-[#1c1c1e]
+                                            ${c.status === 'TYPING' ? 'bg-green-400' : 'bg-green-800'}
+                                        `}/>
+                                        
+                                        {/* Tooltip */}
+                                        <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 bg-black/80 px-2 py-1 rounded text-[10px] text-white opacity-0 group-hover:opacity-100 whitespace-nowrap pointer-events-none transition-opacity">
+                                            {c.name} {c.status === 'TYPING' && '(Typing...)'}
+                                        </div>
+                                    </div>
+                                ))}
+                                {collaborators.length > 0 && (
+                                    <div className="ml-4 text-xs font-mono text-white/30">
+                                        {collaborators.length} ONLINE
+                                    </div>
+                                )}
+                             </div>
                         </div>
+
                         <div className="flex gap-4">
                             <button 
                                 onClick={handleFocusToggle}
@@ -188,14 +252,25 @@ const WriterRoom: React.FC<WriterRoomProps> = ({
                                     >
                                         <div 
                                             className={`
-                                                max-w-[90%] p-3 rounded-2xl text-xs font-mono leading-relaxed
+                                                max-w-[90%] p-3 rounded-2xl text-xs font-mono leading-relaxed relative
                                                 ${msg.role === 'user' 
                                                     ? 'bg-white/10 text-white rounded-br-none' 
-                                                    : 'bg-[#F7931A]/10 border border-[#F7931A]/30 text-[#F7931A] rounded-bl-none'
+                                                    : msg.role === 'system' 
+                                                        ? 'bg-transparent border border-white/10 text-white/50 w-full text-center italic'
+                                                        : 'bg-[#F7931A]/10 border border-[#F7931A]/30 text-[#F7931A] rounded-bl-none'
                                                 }
                                             `}
                                         >
-                                            {msg.text}
+                                            {/* Special Visual for Dice Rolls */}
+                                            {msg.role === 'system' && msg.data?.result ? (
+                                                <div className="flex flex-col items-center gap-1">
+                                                    <span className="text-lg">🎲</span>
+                                                    <span className="font-bold text-white text-sm">{msg.data.result}</span>
+                                                    <span className="text-[10px] uppercase">{msg.data.reason}</span>
+                                                </div>
+                                            ) : (
+                                                msg.text
+                                            )}
                                         </div>
                                     </div>
                                 ))}

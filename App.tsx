@@ -10,6 +10,31 @@ import { useSoundContext } from './contexts/SoundContext';
 import { useWalletContext } from './contexts/WalletContext';
 import { IconData } from './types';
 
+const IDEA_STATE_TEMPLATE = `IDEA STATE: [UNTITLED]
+-----------------------
+GENRE: Cyberpunk / Noir / Fantasy
+TONE: Gritty, High-Stakes
+
+WORLD LOGIC:
+1. Technology is organic.
+2. Currency is memory.
+
+CHARACTERS:
+- [HERO]: A memory dealer running from the debt collectors.
+- [VILLAIN]: An AI construct trying to digitize the physical world.
+
+INCITING INCIDENT:
+The Hero finds a memory chip that doesn't belong to any human.`;
+
+const MANIFESTO_TEXT = `MANIFESTO: STORY OS
+
+A narrative operating system for collaborative storytelling.
+
+1. DEFINE: Create an "Idea State" (World, Logic, Characters).
+2. SIMULATE: Run branching scenes with AI or peers (D&D-style).
+3. COLLECT: Save dialogues as reusable assets.
+4. OWN: Register everything on Story Protocol.`;
+
 const App: React.FC = () => {
     // --- STATE ---
     const [viewMode, setViewMode] = useState<'DESKTOP' | 'LAUNCHER'>('DESKTOP');
@@ -29,19 +54,11 @@ const App: React.FC = () => {
         const isTablet = w >= 768 && w < 1024;
         
         // Adjust grid strides based on icon size
-        // Mobile: Icons are ~80px wide.
-        // Tablet: Icons are ~110px wide.
-        // Desktop: Icons are ~192px wide (w-48).
-        
         const colStride = isMobile ? 100 : (isTablet ? 180 : 240);
         const rowStride = isMobile ? 120 : (isTablet ? 180 : 240);
         const startX = isMobile ? 20 : 60;
         const startY = 120;
 
-        // Trash Position Calculation
-        // Icon Height (approx): 200px (Desktop), 150px (Mobile)
-        // Icon Width: 192px (Desktop), 80px (Mobile)
-        // We need enough margin from bottom/right
         const trashX = w - (isMobile ? 100 : 250);
         const trashY = h - (isMobile ? 160 : 250);
 
@@ -50,7 +67,7 @@ const App: React.FC = () => {
             { id: 'launcher', label: 'IP Launcher', x: startX, y: startY + rowStride, type: 'APP' },
             
             { id: 'manifesto', label: 'Manifesto.txt', x: startX + colStride, y: startY, type: 'FILE' },
-            { id: 'draft', label: 'My_Idea_v1.txt', x: startX + colStride, y: startY + rowStride, type: 'FILE' },
+            { id: 'draft', label: 'Idea_State_v1.txt', x: startX + colStride, y: startY + rowStride, type: 'FILE' },
             
             { id: 'music', label: 'Rcade', x: startX + (colStride * 2), y: startY, type: 'MUSIC', url: 'https://rcade.co/' },
             { id: 'timer', label: 'Sprint', x: startX + (colStride * 2), y: startY + rowStride, type: 'TIMER' },
@@ -58,14 +75,12 @@ const App: React.FC = () => {
             { id: 'shopping', label: 'Shopping', x: startX + (colStride * 3), y: startY, type: 'SHOPPING', url: 'https://ip.world/' },
             { id: 'kb', label: 'Dojo', x: startX + (colStride * 3), y: startY + rowStride, type: 'BOOK' },
             
-            // Trash anchored to bottom right with sufficient padding
             { id: 'trash', label: 'Burn', x: trashX, y: trashY, type: 'TRASH' }, 
         ];
     };
 
     const [icons, setIcons] = useState<IconData[]>(getInitialIcons());
 
-    // Handle Resize to keep Trash in corner
     useEffect(() => {
         const handleResize = () => {
             const w = window.innerWidth;
@@ -113,7 +128,7 @@ const App: React.FC = () => {
             setOpenDocId('manifesto');
         } else if (icon.id === 'draft') {
             playClick();
-            setOpenDocId('draft'); // This will now open the WriterRoom
+            setOpenDocId('draft'); 
         } else if (icon.type === 'NODE') {
             playClick();
             window.open('https://portal.story.foundation/', '_blank');
@@ -134,14 +149,12 @@ const App: React.FC = () => {
 
     return (
         <div className="relative w-full h-screen bg-black overflow-hidden font-sans text-white selection:bg-[#F7931A]/30">
-            {/* Cleaner, simpler shell without video/phaser props */}
             <SpatialShell>
                 <div/>
             </SpatialShell>
 
             <MenuBar />
 
-            {/* --- DESKTOP LAYER --- */}
             <div className={`absolute inset-0 z-10 transition-all duration-700 pt-10 ${viewMode === 'LAUNCHER' || openDocId || showKnowledgeBase ? 'scale-105 blur-[8px] opacity-30 pointer-events-none' : 'scale-100 opacity-100'}`}>
                 {icons.map(icon => (
                     <DraggableIcon 
@@ -170,13 +183,8 @@ const App: React.FC = () => {
                                     hover:scale-[1.02] hover:bg-white/[0.08] hover:border-white/40 hover:shadow-[0_0_80px_rgba(255,255,255,0.2)]
                                 "
                             >
-                                {/* Inner Ring Glow */}
                                 <div className="absolute inset-1 rounded-full border border-white/10 opacity-50 group-hover:border-white/30 transition-colors" />
-
-                                {/* Top Highlight (Glass effect) */}
                                 <div className="absolute top-0 w-1/2 h-[1px] bg-gradient-to-r from-transparent via-white/80 to-transparent opacity-60" />
-                                
-                                {/* Text with slight text-shadow for depth */}
                                 <span className="
                                     relative z-10 font-mono tracking-[0.3em] text-base md:text-lg uppercase text-white/90
                                     drop-shadow-[0_2px_10px_rgba(0,0,0,1)]
@@ -190,33 +198,24 @@ const App: React.FC = () => {
                 )}
             </div>
             
-            {/* --- TIMER WIDGET (Always on top when active) --- */}
             {showTimer && <TimerWidget onClose={() => setShowTimer(false)} />}
 
-            {/* --- DOC VIEWER / WRITER ROOM --- */}
-            {/* Render if either draft or manifesto is open */}
             {(openDocId === 'draft' || openDocId === 'manifesto') && (
                 <WriterRoom 
                     onClose={() => setOpenDocId(null)}
-                    initialTitle={openDocId === 'manifesto' ? 'Manifesto.txt' : 'My_Idea_v1.txt'}
-                    initialContent={openDocId === 'manifesto' 
-                        ? "MANIFESTO: STORY OS\n\nSharing the great interface design work of Jaime Levy.\n\nIt's very inspiring artwork for a young kid using Mac HyperCards."
-                        : undefined // Will use default
-                    }
+                    initialTitle={openDocId === 'manifesto' ? 'Manifesto.txt' : 'Idea_State_v1.txt'}
+                    initialContent={openDocId === 'manifesto' ? MANIFESTO_TEXT : IDEA_STATE_TEMPLATE}
                 />
             )}
             
-            {/* --- KNOWLEDGE BASE --- */}
             {showKnowledgeBase && (
                 <KnowledgeBase onClose={() => setShowKnowledgeBase(false)} />
             )}
 
-            {/* --- IP LAUNCHER APP --- */}
             {viewMode === 'LAUNCHER' && (
                 <IpLauncher onClose={() => setViewMode('DESKTOP')} />
             )}
             
-            {/* --- ELEVENLABS AGENT --- */}
             {/* @ts-ignore */}
             <elevenlabs-convai agent-id="agent_1901kcbdf52ses1s50nght71142d"></elevenlabs-convai>
         </div>

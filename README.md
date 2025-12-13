@@ -1,8 +1,7 @@
 
 # 🎬 StoryOS
 
-> **A spatial hypercard experience. Tribute to Jaime Levy.**  
-> Built with React, Tone.js, and Phaser.
+> StoryOS is a lightweight creative front-end for collaborative, non-linear storytelling. It helps creators structure “Idea States,” build branching narrative scenes using D&D-style play, and collect dialogue packs as assets—designed to later connect to Story Protocol for IP registration and licensing.
 
 ![Status](https://img.shields.io/badge/Status-Alpha-orange) ![Stack](https://img.shields.io/badge/Stack-React_Phaser_Tone-blue) ![AI](https://img.shields.io/badge/AI-Gemini_Multimodal_Live-purple) ![Web3](https://img.shields.io/badge/Network-Story_Odyssey_Testnet-green)
 
@@ -10,11 +9,9 @@
 
 ## 🔮 The Vision
 
-StoryOS is a spatial operating system designed to reclaim the creative workflow from centralized walled gardens. It pays homage to the pioneering interface design work of Jaime Levy, bringing the spirit of Mac HyperCards into the modern browser.
-
-*   **For GMs:** An AI-powered workspace to generate lore, maps, and rules on the fly.
-*   **For Players:** A sovereign character sheet where your stats and loot live in your wallet.
-*   **For Creators:** Register your homebrew monsters and items as IP Assets.
+*   **Idea States:** Define the initial conditions of your narrative world.
+*   **Branching Scenes:** Roleplay outcomes with AI or peers (D&D-style).
+*   **Asset Collection:** Turn dialogues and lore into reusable IP assets.
 
 ---
 

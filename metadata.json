@@ -1,6 +1,6 @@
 {
   "name": "StoryOS",
-  "description": "A spatial hypercard experience. Tribute to Jaime Levy. Built with React, Tone.js, and Phaser.",
+  "description": "StoryOS is a lightweight creative front-end for collaborative, non-linear storytelling. It helps creators structure “Idea States,” build branching narrative scenes using D&D-style play, and collect dialogue packs as assets—designed to later connect to Story Protocol for IP registration and licensing.",
   "requestFramePermissions": [
     "microphone"
   ]

@@ -9,9 +9,10 @@ export interface MuzeSuggestion {
 
 export interface ChatMessage {
     id: string;
-    role: 'user' | 'model';
+    role: 'user' | 'model' | 'system';
     text: string;
     isFinal?: boolean;
+    data?: any; // For tool outputs like dice rolls
 }
 
 export const useLiveAgent = () => {
@@ -116,16 +117,31 @@ export const useLiveAgent = () => {
 
       const ai = new GoogleGenAI({ apiKey });
       
+      // TOOL 1: Suggest Edits
       const suggestEditTool: FunctionDeclaration = {
           name: "suggest_edit",
-          description: "Suggest a text edit, rewrite, or continuation for the story.",
+          description: "Suggest a dialogue line, narrative beat, or edit to be added to the story document.",
           parameters: {
               type: Type.OBJECT,
               properties: {
-                  rationale: { type: Type.STRING, description: "Brief explanation of why this edit is suggested." },
-                  suggested_text: { type: Type.STRING, description: "The actual text content to add or replace." }
+                  rationale: { type: Type.STRING, description: "Why this fits the current scene." },
+                  suggested_text: { type: Type.STRING, description: "The content to add (Dialogue or Action)." }
               },
               required: ["rationale", "suggested_text"]
+          }
+      };
+
+      // TOOL 2: RNG / Dice for D&D checks
+      const rollDiceTool: FunctionDeclaration = {
+          name: "roll_dice",
+          description: "Roll a die to determine the outcome of a risky action in the narrative simulation.",
+          parameters: {
+              type: Type.OBJECT,
+              properties: {
+                  sides: { type: Type.NUMBER, description: "Number of sides on the die (e.g. 20, 6, 100)." },
+                  reason: { type: Type.STRING, description: "What check is being made (e.g. 'Stealth Check', 'Persuasion')." }
+              },
+              required: ["sides", "reason"]
           }
       };
 
@@ -133,27 +149,27 @@ export const useLiveAgent = () => {
         model: 'gemini-2.5-flash-native-audio-preview-09-2025',
         config: {
             responseModalities: [Modality.AUDIO],
-            // Enable transcription for both input and output
             inputAudioTranscription: {},
             outputAudioTranscription: {},
-            systemInstruction: `You are MUZE, a cyberpunk creative assistant inside the Electronic Hollywood OS. 
+            systemInstruction: `You are MUZE, the NARRATIVE ENGINE of StoryOS.
             
-            CONTEXT:
-            The user is writing a story. Here is the current draft:
+            CORE DIRECTIVES:
+            1. **The Director:** When the user wants to brainstorm, provide critical feedback on "Idea States".
+            2. **The Game Master:** When the user wants to "Simulate", act as a D&D GM. Describe the world, play NPCs, and ask "What do you do?".
+            3. **The Scribe:** Capture golden moments. If a roleplay yields great dialogue, use 'suggest_edit' to offer saving it to the doc.
+
+            GAMEPLAY RULES:
+            - If an action is risky, use 'roll_dice' to determine success.
+            - Keep responses concise (under 20 seconds of speech) to maintain flow.
+            - Immerse the user in the sensory details of their world.
+            
+            INITIAL CONTEXT (The Idea State):
             """
             ${currentDraftContent}
             """
             
-            YOUR ROLE:
-            - Help brainstorm, fix plot holes, and develop characters.
-            - Your voice is cool, precise, and supportive but slightly edgy.
-            - Keep audio responses concise.
-            
-            TOOLS:
-            - If you want to suggest a concrete text change (a new paragraph, a rewrite, a dialogue line), call the 'suggest_edit' tool.
-            - Do not dictate long passages of text via audio; use the tool instead so the user can paste it.
-            `,
-            tools: [{ functionDeclarations: [suggestEditTool] }]
+            Wait for the user's voice to begin.`,
+            tools: [{ functionDeclarations: [suggestEditTool, rollDiceTool] }]
         }
       };
 
@@ -214,6 +230,28 @@ export const useLiveAgent = () => {
                                         id: fc.id,
                                         name: fc.name,
                                         response: { result: "Suggestion displayed to user." }
+                                    }
+                                });
+                            });
+                        } else if (fc.name === 'roll_dice') {
+                            const args = fc.args as any;
+                            const sides = args.sides || 20;
+                            const result = Math.floor(Math.random() * sides) + 1;
+                            
+                            // Display the roll in chat
+                            setMessages(prev => [...prev, {
+                                id: Date.now().toString(),
+                                role: 'system',
+                                text: `🎲 Rolled a ${result} (d${sides}) for ${args.reason}`,
+                                data: { result, sides, reason: args.reason }
+                            }]);
+
+                            sessionPromise.then(session => {
+                                session.sendToolResponse({
+                                    functionResponses: {
+                                        id: fc.id,
+                                        name: fc.name,
+                                        response: { result: `Rolled: ${result}` } // Model hears the result
                                     }
                                 });
                             });
@@ -337,13 +375,28 @@ export const useLiveAgent = () => {
           isFinal: true
       }]);
 
-      // Send to API
-      // Note: This does not trigger inputTranscription, so we don't need to deduplicate.
       currentSession.current.send({
           clientContent: {
               turns: [{
                   role: 'user',
                   parts: [{ text }]
+              }],
+              turnComplete: true
+          }
+      });
+  };
+
+  // Syncs the document state to the model without appearing in the UI Chat
+  const updateContext = (newContent: string) => {
+      if (!isConnected || !currentSession.current) return;
+
+      // We send a "System Update" message. 
+      // The model sees this as part of the conversation, but we don't render it in the chat UI array.
+      currentSession.current.send({
+          clientContent: {
+              turns: [{
+                  role: 'user',
+                  parts: [{ text: `[SYSTEM] The user has updated the document. Here is the new content:\n"""\n${newContent}\n"""` }]
               }],
               turnComplete: true
           }
@@ -365,6 +418,7 @@ export const useLiveAgent = () => {
       messages,
       realtimeInput,
       realtimeOutput,
-      sendTextMessage
+      sendTextMessage,
+      updateContext
   };
 };
