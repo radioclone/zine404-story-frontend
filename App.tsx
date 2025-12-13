@@ -104,6 +104,8 @@ const App: React.FC = () => {
         }
     };
 
+    const isWindowOpen = viewMode === 'LAUNCHER' || openDocId || showKnowledgeBase || showArweaveTerminal || showCharacterSheet;
+
     return (
         <div className="relative w-full h-screen bg-black overflow-hidden font-sans text-white selection:bg-[#F7931A]/30">
             <SpatialShell>
@@ -112,7 +114,8 @@ const App: React.FC = () => {
 
             <MenuBar />
 
-            <div className={`absolute inset-0 z-10 transition-all duration-700 pt-10 ${viewMode === 'LAUNCHER' || openDocId || showKnowledgeBase || showArweaveTerminal || showCharacterSheet ? 'scale-105 blur-[8px] opacity-30 pointer-events-none' : 'scale-100 opacity-100'}`}>
+            {/* DESKTOP LAYER (Icons + Widgets) */}
+            <div className={`absolute inset-0 z-10 transition-all duration-700 pt-10 ${isWindowOpen ? 'scale-105 blur-[8px] opacity-30 pointer-events-none' : 'scale-100 opacity-100'}`}>
                 {icons.map(icon => (
                     <DraggableIcon 
                         key={icon.id} 
@@ -123,6 +126,9 @@ const App: React.FC = () => {
                         onHover={() => playHover()}
                     />
                 ))}
+
+                {/* Timer moved here so it blurs with desktop */}
+                {showTimer && <TimerWidget onClose={() => setShowTimer(false)} />}
 
                 {!walletAddress && (
                     <div className="absolute bottom-40 left-0 right-0 flex justify-center z-30 pointer-events-none">
@@ -155,8 +161,7 @@ const App: React.FC = () => {
                 )}
             </div>
             
-            {showTimer && <TimerWidget onClose={() => setShowTimer(false)} />}
-            
+            {/* WINDOW LAYER (z-50) */}
             {showArweaveTerminal && (
                 <ArweaveTerminal onClose={() => setShowArweaveTerminal(false)} />
             )}

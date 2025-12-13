@@ -26,7 +26,7 @@ const VisionButton: React.FC<VisionButtonProps> = ({
           : 'bg-[#1A1A1A]/40 hover:bg-[#2A2A2A]/60 hover:scale-[1.02] hover:shadow-2xl hover:border-white/20'
         }
         backdrop-blur-2xl backdrop-saturate-150
-        flex flex-col h-64 justify-between
+        flex flex-col justify-between
         ${className}
       `}
       {...props}
@@ -36,7 +36,7 @@ const VisionButton: React.FC<VisionButtonProps> = ({
       
       {/* Icon Container */}
       <div className={`
-        w-14 h-14 rounded-2xl flex items-center justify-center text-2xl transition-transform duration-500 ease-out
+        w-12 h-12 md:w-14 md:h-14 rounded-2xl flex items-center justify-center text-xl md:text-2xl transition-transform duration-500 ease-out mb-4
         ${active ? 'bg-white text-black scale-110' : 'bg-white/10 text-white group-hover:scale-110 group-hover:bg-white group-hover:text-black'}
       `}>
         {icon}
@@ -44,11 +44,11 @@ const VisionButton: React.FC<VisionButtonProps> = ({
 
       {/* Text Content */}
       <div className="relative z-10">
-        <h3 className={`text-xl font-bold mb-2 tracking-tight transition-colors ${active ? 'text-white' : 'text-white/90'}`}>
+        <h3 className={`text-lg md:text-xl font-bold mb-2 tracking-tight transition-colors ${active ? 'text-white' : 'text-white/90'}`}>
           {label}
         </h3>
         {subLabel && (
-          <p className={`text-sm leading-relaxed font-medium transition-colors ${active ? 'text-white/80' : 'text-white/50 group-hover:text-white/70'}`}>
+          <p className={`text-xs md:text-sm leading-relaxed font-medium transition-colors ${active ? 'text-white/80' : 'text-white/50 group-hover:text-white/70'}`}>
             {subLabel}
           </p>
         )}

@@ -74,7 +74,7 @@ const DraggableIcon: React.FC<DraggableIconProps> = ({ iconData, onUpdatePos, on
             onMouseDown={handleMouseDown}
             onMouseEnter={onHover}
             style={{ left: iconData.x, top: iconData.y }}
-            className="absolute flex flex-col items-center gap-3 p-2 cursor-pointer group z-10 touch-none"
+            className="absolute flex flex-col items-center gap-3 p-2 cursor-pointer group z-10 hover:z-50 active:z-50 touch-none"
         >
             {/* GLASS ORB CONTAINER */}
             <div className={sphereClasses}>
@@ -101,7 +101,7 @@ const DraggableIcon: React.FC<DraggableIconProps> = ({ iconData, onUpdatePos, on
             </div>
             
             {/* Label - Pixel Font Update */}
-            <span className="font-pixel text-[10px] md:text-xs tracking-widest text-white/80 drop-shadow-md bg-black/40 px-2 py-1 rounded-md backdrop-blur-sm group-hover:text-white transition-colors uppercase">
+            <span className="font-pixel text-[10px] md:text-xs tracking-widest text-white/80 drop-shadow-md bg-black/40 px-2 py-1 rounded-md backdrop-blur-sm group-hover:text-white transition-colors uppercase max-w-[120px] text-center leading-tight truncate">
                 {iconData.label}
             </span>
         </div>
