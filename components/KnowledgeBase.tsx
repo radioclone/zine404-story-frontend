@@ -7,9 +7,40 @@ interface KnowledgeBaseProps {
 }
 
 const KnowledgeBase: React.FC<KnowledgeBaseProps> = ({ onClose }) => {
+    const activeModuleRef = React.useRef<string | null>(null);
     const [activeModule, setActiveModule] = useState<string | null>(null);
 
     const modules = [
+        {
+            id: 'cinematic-gameplay',
+            title: 'Cinematic Gameplay (2025)',
+            description: 'How to turn D&D sessions into streaming IP assets.',
+            content: `THE "NETFLIX" CAMPAIGN MODEL
+------------------------------
+In the modern era, a D&D session is more than a game. It is a "Writer's Room" for your next show.
+
+1. SESSION ZERO (The Pilot)
+   - Use StoryOS to define your "Series Bible."
+   - Agree on Tone (e.g., Stranger Things vs. Game of Thrones).
+   - Define the Cast (Player Characters) as IP Assets.
+
+2. THE "DIRECTOR" AI
+   - Enable the [DIRECTOR] mode in Muze.
+   - The AI will listen to your gameplay and suggest:
+     * Camera Angles ("Dutch angle on the rogue...")
+     * Lighting Cues ("Neon-noir reflections...")
+     * SFX ("The hum of the mana-drive...")
+
+3. MINTING THE EPISODE
+   - When a session ends, click "MINT SEASON."
+   - This registers the transcript, audio, and visuals to Story Protocol.
+   - Your guild (party) now owns the on-chain rights to that episode.
+
+4. COMMUNITY COLLABORATION
+   - Token-gate your "Season" to allow fans to vote on plot twists.
+   - Let other guilds "Remix" your villains or settings.
+`
+        },
         {
             id: 'structure',
             title: 'Structure 101: The Paradigm',
@@ -147,16 +178,6 @@ FLASHBACKS
 ----------
 - Header: EXT. LOCATION - NIGHT - 1956, FLASHBACK
 - End with: END FLASHBACK.
-`
-        },
-        {
-            id: 'voice',
-            title: 'Voice Notes (Roadmap)',
-            description: 'Async voice memos and transcription.',
-            content: `COMING SOON:
-- Record plot ideas on the go.
-- AI automatically tags them: #Plot, #Character, #Dialogue.
-- Auto-summarization of rambling thoughts into coherent beats.
 `
         }
     ];

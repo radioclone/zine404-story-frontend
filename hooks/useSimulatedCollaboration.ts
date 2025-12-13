@@ -11,30 +11,30 @@ export interface Collaborator {
 }
 
 const MOCK_USERS = [
-    { id: 'u1', name: 'Producer_Dave', initials: 'PD', color: '#FF5733' }, // Orange
-    { id: 'u2', name: 'Script_Doc_AI', initials: 'AI', color: '#33FF57' }, // Green
-    { id: 'u3', name: 'Anon_Writer', initials: 'AW', color: '#3357FF' },   // Blue
-    { id: 'u4', name: 'Director_X', initials: 'DX', color: '#F033FF' },    // Magenta
+    { id: 'u1', name: 'Lore_Keeper_DAO', initials: 'LK', color: '#8b5cf6' }, // Purple
+    { id: 'u2', name: 'FX_Specialist_AI', initials: 'FX', color: '#00FF41' }, // Cyber Green
+    { id: 'u3', name: 'Rules_Lawyer_Bob', initials: 'RL', color: '#FF5733' },   // Orange
+    { id: 'u4', name: 'Concept_Artist_X', initials: 'CX', color: '#F033FF' },    // Magenta
 ];
 
 const FRAGMENTS = [
-    "\n\n[PRODUCER_NOTE]: We need to clarify the stakes here. Can we raise the tension?",
-    "\n\nAIKO\n(whispering)\nThey are watching us right now.",
-    "\n\nEXT. NEON MARKET - NIGHT",
-    "\n\nKENJI\nI don't deal in promises. I deal in memory.",
-    "\n\n[NOTE]: Ensure this connects back to the Act 2 setup we discussed.",
-    "\n\n[SYSTEM]: Auto-saving snapshot to IP Network...",
-    "\n\n[DIRECTOR]: Let's cut this line. Less is more.",
+    "\n\n[LORE UPDATE]: The mana crystals are unstable in this district.",
+    "\n\nBRIX\n(yelling)\nI rage!",
+    "\n\n[VISUAL CUE]: Camera dolly zoom on the artifact.",
+    "\n\n[GM]: Roll for initiative.",
+    "\n\nVALERIUS\nI cast Charm Person on the guard.",
+    "\n\n[SYSTEM]: Guild Wallet received 0.5 ETH for Asset #402.",
+    "\n\n[DIRECTOR]: Let's tighten the pacing here. Cut the monologue.",
     "\n\n(beat)\n",
 ];
 
 const CHATS = [
-    "I think the pacing in scene 3 is a bit slow.",
-    "Can we check if this dialogue fits the character voice?",
-    "Wait, didn't we say Kenji lost his arm?",
-    "Loving the atmosphere here!",
-    "Let's push the cyberpunk elements more.",
-    "Should we roll for perception here?",
+    "I think we should mint this character sheet as an NFT.",
+    "Can we get an AI visual for the dragon?",
+    "That roll was definitely faked lol.",
+    "The atmosphere here feels very Stranger Things S4.",
+    "Should we token-gate this plot twist?",
+    "Wait, is this canon to the wider campaign?",
 ];
 
 export const useSimulatedCollaboration = (
@@ -58,7 +58,7 @@ export const useSimulatedCollaboration = (
         addMessage({
             id: Date.now().toString(),
             role: 'system',
-            text: `${firstUser.name} joined the room.`
+            text: `${firstUser.name} joined the Guild Session.`
         });
 
         const interval = setInterval(() => {
@@ -70,7 +70,7 @@ export const useSimulatedCollaboration = (
                         addMessage({
                             id: Date.now().toString(),
                             role: 'system',
-                            text: `${nextUser.name} joined the room.`
+                            text: `${nextUser.name} joined the Guild Session.`
                         });
                         return [...prev, { ...nextUser, status: 'VIEWING' as const }];
                     }

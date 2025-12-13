@@ -1,5 +1,5 @@
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { createWalletClient, custom, defineChain, WalletClient } from 'viem';
 import CoinbaseWalletSDK from '@coinbase/wallet-sdk';
 
@@ -36,19 +36,36 @@ export const useWallet = (): WalletState => {
     const [client, setClient] = useState<WalletClient | null>(null);
     const [isConnecting, setIsConnecting] = useState(false);
     const [isSimulated, setIsSimulated] = useState(false);
+    
+    // Lazy ref for SDK to prevent init errors on render
+    const sdkRef = useRef<CoinbaseWalletSDK | null>(null);
 
-    // Initialize Coinbase SDK
-    const sdk = new CoinbaseWalletSDK({
-        appName: 'Electronic Hollywood II',
-        appLogoUrl: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=200&auto=format&fit=crop',
-        darkMode: true
-    });
+    const getSdk = useCallback(() => {
+        if (!sdkRef.current) {
+            try {
+                sdkRef.current = new CoinbaseWalletSDK({
+                    appName: 'StoryOS',
+                    appLogoUrl: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=200&auto=format&fit=crop',
+                    darkMode: true
+                });
+            } catch (e) {
+                console.warn("Coinbase SDK Init Error (Sandbox?):", e);
+                return null;
+            }
+        }
+        return sdkRef.current;
+    }, []);
 
     const connect = useCallback(async () => {
         setIsConnecting(true);
         setIsSimulated(false);
         try {
+            const sdk = getSdk();
+            // If SDK failed to init (e.g. iframe blocked), throw to catch block
+            if (!sdk) throw new Error("SDK_INIT_FAILED");
+
             // Create a Web3 Provider for Story Odyssey
+            // This might also throw "Blocked a frame" in some sandboxes
             const ethereum = sdk.makeWeb3Provider(storyOdyssey.rpcUrls.default.http[0], storyOdyssey.id);
 
             // Request Accounts (Triggers Popup/Extension)
@@ -67,30 +84,27 @@ export const useWallet = (): WalletState => {
                 setClient(walletClient);
             }
         } catch (error: any) {
-            console.error("Wallet connection failed:", error);
+            console.warn("Wallet connection failed (Switching to Simulation Mode):", error);
             
-            // SECURITY FALLBACK: 
-            // If running in a sandbox (like StackBlitz/Replit) that blocks cross-origin iframes/popups,
-            // fallback to Simulation Mode so the UI can still be tested.
-            const msg = error?.message || String(error);
-            if (msg.includes('Blocked a frame') || msg.includes('cross-origin')) {
-                console.warn("Sandbox environment detected. Enabling Wallet Simulation Mode.");
-                setAddress("0x71C...9A21"); // Mock Address
-                setIsSimulated(true);
-            }
+            // FALLBACK TO SIMULATION
+            // This catches "Blocked a frame", "SDK_INIT_FAILED", "User denied", etc.
+            setAddress("0x71C...9A21"); // Mock Address
+            setIsSimulated(true);
+            
         } finally {
             setIsConnecting(false);
         }
-    }, []);
+    }, [getSdk]);
 
     const disconnect = useCallback(() => {
         try {
-            sdk.disconnect();
+            const sdk = getSdk();
+            if (sdk) sdk.disconnect();
         } catch (e) { console.warn(e); }
         setAddress(null);
         setClient(null);
         setIsSimulated(false);
-    }, []);
+    }, [getSdk]);
 
     return { address, isConnecting, isSimulated, client, connect, disconnect };
 };

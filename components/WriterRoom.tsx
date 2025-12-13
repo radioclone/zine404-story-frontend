@@ -14,23 +14,41 @@ interface WriterRoomProps {
     initialContent?: string;
 }
 
-const DEFAULT_CONTENT = `PROJECT IDEA: "The Neon Samurai"
+const CAMPAIGN_BIBLE_TEMPLATE = `SERIES BIBLE: "THE ETHERSEA CHRONICLES"
+----------------------------------------
+FORMAT: Interactive Campaign (Season 1)
+GENRE: Arcane Punk / Noir
+TOKEN GATE: Guild_Ether_01
+
+CORE CONCEPT:
+A crew of magical debt collectors discovers a glitch in reality that threatens the blockchain of memories holding the city together.
+
+THE PARTY (CAST):
+- [PLAYER 1]: Valerius (The Face) - Sorcerer/Bard.
+- [PLAYER 2]: Brix (The Muscle) - Warforged Barbarian.
+- [PLAYER 3]: Echo (The Brains) - Divination Wizard.
+
+SEASON ARC:
+- Episode 1: The Job (Heist goes wrong).
+- Episode 2: The Glitch (Discovery of the artifact).
+- Mid-Season Finale: The Guild turns on them.
+
+SCENE 1: THE DOCKS (Action Beat)
 --------------------------------
+SETTING: Midnight. Rain slicks the neon-lit cobblestones.
+MECHANICS: Stealth Check (DC 15).
 
-Logline: A ronin in 2140 Tokyo seeks redemption by protecting an AI child from the Yakuza.
+[GM/DIRECTOR]: The camera PANS DOWN from the towering spires to the grimy docks. Brix, you're hiding behind a crate of illicit mana-crystals. What do you do?
 
-Characters:
-- Kenji (The Ronin)
-- Aiko (The AI)
-
-Notes:
-- Need to commission concept art.
-- Exploring different licensing models for fan fiction.`;
+BRIX
+I signal to Valerius. "Coast is clear."
+(Rolls Stealth: 18)
+`;
 
 const WriterRoom: React.FC<WriterRoomProps> = ({ 
     onClose, 
-    initialTitle = "Draft_01", 
-    initialContent = DEFAULT_CONTENT 
+    initialTitle = "Campaign_Bible_S01", 
+    initialContent = CAMPAIGN_BIBLE_TEMPLATE 
 }) => {
     const [content, setContent] = useState(initialContent);
     const [lastSyncedContent, setLastSyncedContent] = useState(initialContent);
@@ -110,7 +128,7 @@ const WriterRoom: React.FC<WriterRoomProps> = ({
         setPermaSaving(true);
         setTimeout(() => {
             setPermaSaving(false);
-            alert("Draft saved to Arweave Permaweb (Simulated).\nTX: 0x...ao_process");
+            alert("Season Arc minted to Story Protocol.\nAssets distributed to Guild Wallets.\nTX: 0x...odyssey");
         }, 2000);
     };
 
@@ -122,8 +140,14 @@ const WriterRoom: React.FC<WriterRoomProps> = ({
         }
     };
 
+    const handleAnalyzeSelection = () => {
+        if (!selectedText || !isConnected) return;
+        // Updated prompt to focus on Cinematic/RPG analysis
+        sendTextMessage(`[DIRECTOR REQUEST] Analyze this scene. 1. Is the RPG mechanic (DC/Roll) fair? 2. Visualize this as a Netflix shot (Lighting/Camera). Use 'visualize_scene' tool.`);
+    };
+
     return (
-        <WindowFrame title="Writer's Room" onClose={onClose}>
+        <WindowFrame title="Writer's Room // Campaign Mode" onClose={onClose}>
             <div className="flex w-full h-full relative overflow-hidden">
                 
                 {/* --- MAIN EDITOR --- */}
@@ -137,7 +161,7 @@ const WriterRoom: React.FC<WriterRoomProps> = ({
                                  <h2 className="text-2xl font-bold text-white/90">{initialTitle}</h2>
                                  {isSyncing && (
                                     <span className="text-[10px] font-mono text-[#F7931A] animate-pulse ml-2 px-2 py-1 rounded bg-[#F7931A]/10 border border-[#F7931A]/20">
-                                        SYNCING...
+                                        UPLOADING TO GUILD...
                                     </span>
                                  )}
                              </div>
@@ -147,7 +171,7 @@ const WriterRoom: React.FC<WriterRoomProps> = ({
                         {/* MODE SELECTOR */}
                         {isConnected && (
                             <div className="flex bg-white/5 rounded-lg p-1 border border-white/10">
-                                {(['ARCHITECT', 'GAME_MASTER', 'EDITOR'] as AgentMode[]).map((m) => (
+                                {(['GAME_MASTER', 'DIRECTOR', 'EDITOR'] as AgentMode[]).map((m) => (
                                     <button
                                         key={m}
                                         onClick={() => switchMode(m)}
@@ -159,20 +183,30 @@ const WriterRoom: React.FC<WriterRoomProps> = ({
                             </div>
                         )}
 
-                        <div className="flex gap-4">
+                        <div className="flex gap-4 items-center">
+                            {/* Analyze Selection Button (Visible when text selected & AI connected) */}
+                            {selectedText && isConnected && (
+                                <button 
+                                    onClick={handleAnalyzeSelection}
+                                    className="px-4 py-2 rounded-full border border-[#F7931A] text-[#F7931A] bg-[#F7931A]/10 text-sm font-mono flex items-center gap-2 transition-all hover:bg-[#F7931A]/20 animate-scale-in"
+                                >
+                                    <span>🎥</span> VISUALIZE
+                                </button>
+                            )}
+
                             <button 
                                 onClick={handlePermaSave}
                                 disabled={permaSaving}
                                 className={`px-4 py-2 rounded-full border text-sm font-mono flex items-center gap-2 transition-all ${permaSaving ? 'bg-[#00FF41]/20 border-[#00FF41] text-[#00FF41]' : 'border-white/20 text-white/50 hover:bg-white/10 hover:text-white'}`}
                             >
                                 <span className={permaSaving ? "animate-spin" : ""}>⟳</span> 
-                                {permaSaving ? 'UPLOADING...' : 'PERMA-SAVE'}
+                                {permaSaving ? 'MINTING SEASON...' : 'MINT SEASON'}
                             </button>
                             <button 
                                 onClick={handleFocusToggle}
                                 className={`px-4 py-2 rounded-full border text-sm font-mono flex items-center gap-2 transition-all ${isFocusOn ? 'bg-[#F7931A]/20 border-[#F7931A] text-[#F7931A]' : 'border-white/20 text-white/50 hover:bg-white/10'}`}
                             >
-                                <span className={isFocusOn ? "animate-pulse" : ""}>●</span> FOCUS MODE
+                                <span className={isFocusOn ? "animate-pulse" : ""}>●</span> CINEMA MODE
                             </button>
                         </div>
                     </div>
@@ -193,7 +227,7 @@ const WriterRoom: React.FC<WriterRoomProps> = ({
                                     : 'bg-white/[0.02] text-white/60 border-white/[0.05] hover:bg-white/[0.04] focus:bg-white/[0.06] focus:text-white/90 focus:border-white/20 focus:shadow-[0_0_30px_rgba(255,255,255,0.05)] focus:scale-[1.005]'
                                 }
                             `}
-                            placeholder="Start typing your story..."
+                            placeholder="Describe your scene or roll for initiative..."
                         />
                         
                         {/* Typing Indicator Overlay */}
@@ -204,7 +238,7 @@ const WriterRoom: React.FC<WriterRoomProps> = ({
                                         <div key={c.id} className="w-4 h-4 rounded-full border border-black" style={{ backgroundColor: c.color }} />
                                     ))}
                                 </div>
-                                <span className="text-[10px] text-white/60 font-mono">Typing...</span>
+                                <span className="text-[10px] text-white/60 font-mono">Guild active...</span>
                             </div>
                          )}
 

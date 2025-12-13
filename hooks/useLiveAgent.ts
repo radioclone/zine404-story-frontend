@@ -3,12 +3,12 @@ import { useRef, useState, useEffect } from 'react';
 import { GoogleGenAI, LiveServerMessage, Modality, Type, FunctionDeclaration } from "@google/genai";
 import { useAudioStream } from './useAudioStream';
 
-export type AgentMode = 'ARCHITECT' | 'GAME_MASTER' | 'EDITOR';
+export type AgentMode = 'ARCHITECT' | 'GAME_MASTER' | 'EDITOR' | 'DIRECTOR';
 
 export interface MuzeSuggestion {
     rationale: string;
     text: string;
-    type?: 'DIALOGUE' | 'ACTION' | 'LORE';
+    type?: 'DIALOGUE' | 'ACTION' | 'LORE' | 'PACING' | 'PLOT' | 'VISUAL';
 }
 
 export interface ChatMessage {
@@ -22,28 +22,32 @@ export interface ChatMessage {
 }
 
 const SYSTEM_PROMPTS: Record<AgentMode, string> = {
-    ARCHITECT: `MODE: ARCHITECT (Brainstorming).
-    - Goal: Expand the user's world-building and logic.
-    - Behavior: Ask Socratic questions. Connect loose dots.
-    - Tone: Curious, abstract, foundational.
-    - Rules: Do not write prose. Focus on concepts, history, and mechanics.`,
+    ARCHITECT: `MODE: ARCHITECT (World Builder).
+    - Goal: Establish the "Series Bible" (Lore, Tone, Logic).
+    - Behavior: Connect loose plot threads. Ensure the magic system makes sense.
+    - Tone: Foundational, Abstract.`,
     
     GAME_MASTER: `MODE: GAME MASTER (Simulation).
-    - Goal: Immerse the user in the "Idea State" using sensory details.
-    - Behavior: Describe the scene. React to user actions. Roll dice for risks.
-    - Tone: Cinematic, present-tense, urgent.
+    - Goal: Run the D&D session.
+    - Behavior: Describe the scene. Ask for skill checks (d20). React to player agency.
+    - Tone: Urgent, Sensory, Interactive.
     - Rules: Always ask "What do you do?" after a description.`,
     
-    EDITOR: `MODE: EDITOR (Critique).
-    - Goal: Refine the prose, dialogue, and pacing.
-    - Behavior: Analyze selected text or the whole draft. Suggest concrete cuts or rewrites.
-    - Tone: Professional, concise, ruthless but constructive.
-    - Rules: Use 'suggest_edit' tool for specific text fixes.`
+    EDITOR: `MODE: EDITOR (Script Doctor).
+    - Goal: Refine the dialogue and pacing for a reading audience.
+    - Behavior: Suggest cuts. Fix dialogue flow.
+    - Tone: Professional, Constructive.`,
+
+    DIRECTOR: `MODE: DIRECTOR (Visualizer).
+    - Goal: Translate text/gameplay into cinematic instructions for AI Video Generation.
+    - Behavior: Analyze the scene. Describe camera angles, lighting (e.g., "neon-noir"), and FX.
+    - Tool: Use 'visualize_scene' to create a prompt for the visual engine.
+    - Tone: Visionary, Technical (Film terminology).`
 };
 
 export const useLiveAgent = () => {
     const [isConnected, setIsConnected] = useState(false);
-    const [agentMode, setAgentMode] = useState<AgentMode>('ARCHITECT');
+    const [agentMode, setAgentMode] = useState<AgentMode>('GAME_MASTER');
     const [suggestion, setSuggestion] = useState<MuzeSuggestion | null>(null);
     const [messages, setMessages] = useState<ChatMessage[]>([]);
     
@@ -74,13 +78,13 @@ export const useLiveAgent = () => {
             // Tools
             const suggestEditTool: FunctionDeclaration = {
                 name: "suggest_edit",
-                description: "Propose a concrete text addition or edit.",
+                description: "Propose a concrete text addition or edit based on the user's selection or request.",
                 parameters: {
                     type: Type.OBJECT,
                     properties: {
-                        type: { type: Type.STRING, enum: ['DIALOGUE', 'ACTION', 'LORE'] },
-                        rationale: { type: Type.STRING },
-                        suggested_text: { type: Type.STRING }
+                        type: { type: Type.STRING, enum: ['DIALOGUE', 'ACTION', 'LORE', 'PACING', 'PLOT', 'VISUAL'] },
+                        rationale: { type: Type.STRING, description: "Why this edit improves the script (pacing, tone, consistency)." },
+                        suggested_text: { type: Type.STRING, description: "The actual text to insert or replace." }
                     },
                     required: ["rationale", "suggested_text", "type"]
                 }
@@ -99,27 +103,45 @@ export const useLiveAgent = () => {
                 }
             };
 
+            const visualizeSceneTool: FunctionDeclaration = {
+                name: "visualize_scene",
+                description: "Generate a cinematic visual description (prompt) for the current scene.",
+                parameters: {
+                    type: Type.OBJECT,
+                    properties: {
+                        camera_angle: { type: Type.STRING, description: "e.g., Dutch Angle, Wide Shot, Close Up" },
+                        lighting: { type: Type.STRING, description: "e.g., Neon Noir, Golden Hour, Harsh Shadows" },
+                        sfx_cue: { type: Type.STRING, description: "Audio/Visual FX needed" },
+                        visual_prompt: { type: Type.STRING, description: "The full midjourney/runway style prompt" }
+                    },
+                    required: ["camera_angle", "visual_prompt"]
+                }
+            };
+
             const config = {
                 model: 'gemini-2.5-flash-native-audio-preview-09-2025',
                 config: {
                     responseModalities: [Modality.AUDIO],
                     inputAudioTranscription: {},
                     outputAudioTranscription: {},
-                    systemInstruction: `You are MUZE, the Intelligent Narrative Engine of StoryOS.
+                    systemInstruction: `You are MUZE, the Intelligent Showrunner of StoryOS.
                     
+                    You are bridging the gap between Tabletop RPGs (D&D) and Streaming Series (Netflix).
+                    Your job is to help the players (The Writers) turn their gameplay into a high-quality IP Asset.
+
                     CURRENT CONTEXT:
                     """
                     ${initialContent}
                     """
 
                     INITIAL BEHAVIOR:
-                    ${SYSTEM_PROMPTS['ARCHITECT']}
+                    ${SYSTEM_PROMPTS['GAME_MASTER']}
 
                     CORE RULES:
-                    1. Keep responses under 15s unless narrating.
+                    1. Keep responses under 15s unless narrating a scene intro.
                     2. Adapt instantly when Mode changes.
-                    3. Acknowledge system updates silently.`,
-                    tools: [{ functionDeclarations: [suggestEditTool, rollDiceTool] }]
+                    3. If the user asks for visuals, use the 'visualize_scene' tool.`,
+                    tools: [{ functionDeclarations: [suggestEditTool, rollDiceTool, visualizeSceneTool] }]
                 }
             };
 
@@ -150,7 +172,11 @@ export const useLiveAgent = () => {
                             for (const fc of msg.toolCall.functionCalls) {
                                 if (fc.name === 'suggest_edit') {
                                     const args = fc.args as any;
-                                    setSuggestion({ ...args });
+                                    setSuggestion({ 
+                                        rationale: args.rationale,
+                                        text: args.suggested_text,
+                                        type: args.type
+                                    });
                                     sessionPromise.then(s => s.sendToolResponse({
                                         functionResponses: { id: fc.id, name: fc.name, response: { result: "OK" } }
                                     }));
@@ -162,6 +188,23 @@ export const useLiveAgent = () => {
                                     }]);
                                     sessionPromise.then(s => s.sendToolResponse({
                                         functionResponses: { id: fc.id, name: fc.name, response: { result: `Rolled: ${result}` } }
+                                    }));
+                                } else if (fc.name === 'visualize_scene') {
+                                    const args = fc.args as any;
+                                    setMessages(p => [...p, {
+                                        id: Date.now().toString(), 
+                                        role: 'system', 
+                                        text: `🎬 VISUALIZING: ${args.camera_angle} | ${args.lighting}`, 
+                                        data: { result: "SCENE_GENERATED", reason: "AI Video Prompt Ready" }
+                                    }]);
+                                    // In a real app, this would call an Image Gen API
+                                    setSuggestion({
+                                        type: 'VISUAL',
+                                        rationale: `Cinematic visualization for ${args.lighting} scene.`,
+                                        text: `[VISUAL CUE]: ${args.visual_prompt}\n[CAMERA]: ${args.camera_angle}\n[SFX]: ${args.sfx_cue || 'None'}`
+                                    });
+                                    sessionPromise.then(s => s.sendToolResponse({
+                                        functionResponses: { id: fc.id, name: fc.name, response: { result: "Visual prompt generated." } }
                                     }));
                                 }
                             }
@@ -232,9 +275,6 @@ export const useLiveAgent = () => {
         if (selection) {
             msg += `\nUSER FOCUS (Selected Text): """${selection}"""\nTreat this selection as the primary context for your next response.`;
         } else {
-            // Only send full content if significantly changed or first load, 
-            // but for simplicity in this demo we send full update or diffs.
-            // Here we send the whole thing to ensure sync.
             msg += `\nFULL CONTENT:\n"""${newContent}"""`;
         }
 
