@@ -11,19 +11,19 @@ export const useDesktopGrid = () => {
         const isMobile = w < 640;
         const isTablet = w >= 640 && w < 1024;
         
-        // Grid Spacing
-        const startX = isMobile ? 20 : 40;
-        const startY = isMobile ? 100 : 120;
-        const colStride = isMobile ? 90 : (isTablet ? 110 : 140);
-        const rowStride = isMobile ? 110 : (isTablet ? 130 : 160);
+        // Grid Spacing - INCREASED STRIDES
+        const startX = isMobile ? 25 : 50;
+        const startY = isMobile ? 110 : 140;
         
-        // Trash Position (Bottom Right)
-        const trashX = w - (isMobile ? 80 : 120);
+        // Wider spacing to prevent circle overlap (Icon is ~96px on desktop)
+        const colStride = isMobile ? 110 : (isTablet ? 150 : 180);
+        const rowStride = isMobile ? 130 : (isTablet ? 170 : 200);
+        
+        // Trash Position (Bottom Right) - Pushed further to corner
+        const trashX = w - (isMobile ? 90 : 140);
         const trashY = h - (isMobile ? 100 : 140);
 
         // Define Grid Positions
-        // Mobile: 3 columns max, tighter packing
-        // Desktop: Vertical columns on left
         
         const getPos = (col: number, row: number) => ({
             x: startX + (col * colStride),
@@ -41,7 +41,8 @@ export const useDesktopGrid = () => {
             { id: 'bazar', label: 'Bazar Mkt', ...getPos(1, 1), type: 'MARKET' },
             { id: 'draft', label: 'Draft_v1.txt', ...getPos(1, 2), type: 'FILE' },
 
-            // Column 3 (On mobile, might wrap or push down if screen is narrow, but x=180 usually fits)
+            // Column 3 
+            // On mobile, col 2 might push off-screen if too wide, but with stride 110 it fits 3 cols in ~360px
             { id: 'music', label: 'Music', ...getPos(isMobile ? 0 : 2, isMobile ? 3 : 0), type: 'MUSIC', url: 'https://rcade.co/' },
             { id: 'kb', label: 'Dojo', ...getPos(isMobile ? 1 : 2, isMobile ? 3 : 1), type: 'BOOK' },
             { id: 'timer', label: 'Sprint', ...getPos(isMobile ? 2 : 2, isMobile ? 3 : 2), type: 'TIMER' },

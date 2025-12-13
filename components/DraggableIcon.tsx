@@ -57,8 +57,9 @@ const DraggableIcon: React.FC<DraggableIconProps> = ({ iconData, onUpdatePos, on
 
     // The "Glass Sphere" Skin Configuration
     // Replicating the glossy bubble look from the reference image
+    // Updated: w-20 (80px) on mobile, w-24 (96px) on desktop to help with spacing
     const sphereClasses = `
-        w-24 h-24 rounded-full
+        w-20 h-20 md:w-24 md:h-24 rounded-full
         bg-black/60
         border border-white/10
         relative flex items-center justify-center
@@ -82,8 +83,8 @@ const DraggableIcon: React.FC<DraggableIconProps> = ({ iconData, onUpdatePos, on
                  {/* Specular Highlight (The Shine) */}
                  <div className="absolute top-0 left-0 right-0 h-1/2 rounded-t-full bg-gradient-to-b from-white/10 to-transparent pointer-events-none opacity-50" />
                  
-                 {/* Inner Icon */}
-                 <div className="relative z-10 w-12 h-12 filter drop-shadow-[0_4px_4px_rgba(0,0,0,0.5)]">
+                 {/* Inner Icon - Responsive Size */}
+                 <div className="relative z-10 w-10 h-10 md:w-12 md:h-12 filter drop-shadow-[0_4px_4px_rgba(0,0,0,0.5)]">
                      {iconData.iconImage ? (
                         <img 
                             src={iconData.iconImage} 
