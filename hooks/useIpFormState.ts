@@ -19,7 +19,8 @@ export const useIpFormState = (walletAddress: string | null) => {
         commercialRevShare: 10,
         derivativesAllowed: true,
         attribution: true,
-        aiTrainingAllowed: true
+        aiTrainingAllowed: true,
+        useUdl: true
     });
 
     // Auto-update first contributor when wallet connects

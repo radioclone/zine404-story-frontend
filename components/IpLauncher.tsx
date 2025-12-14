@@ -325,12 +325,66 @@ const IpLauncher: React.FC<IpLauncherProps> = ({ onClose }) => {
                         {/* STEP 4: LICENSING */}
                         {activeStep === 'LICENSE' && (
                             <div className="space-y-6 md:space-y-10 animate-scale-in max-w-4xl pb-10">
-                                <div>
-                                    <h1 className="text-3xl md:text-5xl font-light mb-2 md:mb-4">License Terms</h1>
-                                    <p className="text-base md:text-xl text-white/60 font-light font-mono">
-                                        Define how others can use your work.
-                                    </p>
+                                <div className="flex justify-between items-start">
+                                    <div>
+                                        <h1 className="text-3xl md:text-5xl font-light mb-2 md:mb-4">License Terms</h1>
+                                        <p className="text-base md:text-xl text-white/60 font-light font-mono">
+                                            Define how others can use your work.
+                                        </p>
+                                    </div>
+                                    <button 
+                                        onClick={handleAiSuggest}
+                                        disabled={isAnalyzing}
+                                        className="hidden md:flex items-center gap-2 px-4 py-2 rounded-full border border-[#F7931A] text-[#F7931A] bg-[#F7931A]/10 text-xs font-mono hover:bg-[#F7931A]/20 transition-all"
+                                    >
+                                        {isAnalyzing ? <span className="animate-spin">⟳</span> : '✨'} 
+                                        {isAnalyzing ? 'ANALYZING...' : 'AI STRATEGY'}
+                                    </button>
                                 </div>
+
+                                {/* AI SUGGESTION RESULT */}
+                                {suggestion && (
+                                    <div className="bg-[#F7931A]/10 border border-[#F7931A] rounded-2xl p-6 animate-scale-in relative">
+                                        <div className="flex items-start gap-4">
+                                            <div className="text-2xl">💡</div>
+                                            <div className="flex-1">
+                                                <h3 className="text-[#F7931A] font-bold font-mono text-sm tracking-widest mb-2">RECOMMENDATION: {suggestion.type.replace('_', ' ')}</h3>
+                                                <p className="text-white/80 text-sm leading-relaxed mb-4">{suggestion.reasoning}</p>
+                                                
+                                                {suggestion.type === 'COMMERCIAL_USE' && (
+                                                    <div className="flex gap-4 mb-4 text-xs font-mono text-[#F7931A]/80">
+                                                        <span>FEE: {suggestion.price} IP</span>
+                                                        <span>REV SHARE: {suggestion.commercialRevShare}%</span>
+                                                    </div>
+                                                )}
+
+                                                <div className="flex gap-3">
+                                                    <button 
+                                                        onClick={applySuggestion}
+                                                        className="bg-[#F7931A] text-black px-4 py-2 rounded-lg text-sm font-bold hover:bg-[#ffad42]"
+                                                    >
+                                                        Apply Suggestion
+                                                    </button>
+                                                    <button 
+                                                        onClick={() => setSuggestion(null)}
+                                                        className="text-white/40 px-4 py-2 text-sm hover:text-white"
+                                                    >
+                                                        Dismiss
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+                                
+                                {/* Mobile AI Button */}
+                                <button 
+                                    onClick={handleAiSuggest}
+                                    disabled={isAnalyzing}
+                                    className="md:hidden w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-[#F7931A] text-[#F7931A] bg-[#F7931A]/10 text-sm font-mono mb-4"
+                                >
+                                    {isAnalyzing ? 'ANALYZING...' : '✨ ASK AI STRATEGY'}
+                                </button>
 
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                                     <button 
